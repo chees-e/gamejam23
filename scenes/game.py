@@ -27,15 +27,42 @@ class Root:
         self.coords = [(x, y)]
         self.subroots = []  # list of roots
 
-    def draw(self, colour):
+        self.choppedroot = []
+        self.choppedsubroots = []
+        self.timesincechop = 0
+
+    # param: Color
+    def draw(self, colour, thickness_scale=1):
         delta_thickness = (1 - self.thickness_scale) * self.thickness / len(self.coords)
 
         for i in range(len(self.coords)):
             pygame.draw.circle(self.screen, colour, list(map(round, self.coords[i])),
-                               round((self.thickness - i * delta_thickness) / 2))
+                               round((self.thickness - i * delta_thickness) * thickness_scale / 2))
+            if thickness_scale < 1:
+                self.coords[i] = (self.coords[i][0] + 2 - random.random() * 4, self.coords[i][1] + 2 - random.random() * 4)
 
         for i in range(len(self.subroots)):
             self.subroots[i].draw(colour)
+
+        if self.timesincechop > 0:
+            print("FADING", self.timesincechop,round(255 - 10 * self.timesincechop))
+            if self.timesincechop > 60:
+                self.timesincechop = 0
+                self.choppedroot = []
+                self.choppedsubroots = []
+            else:
+                # smh they cant draw transparent
+                scale = 0.98**self.timesincechop
+                for i in range(len(self.choppedroot)):
+                    pygame.draw.circle(self.screen, colour, list(map(round, self.choppedroot[i])),
+                                       round((self.thickness - i * delta_thickness) * scale / 2))
+                    self.choppedroot[i] = (self.choppedroot[i][0] + 2 - random.random() * 4, self.choppedroot[i][1] + 2 - random.random() * 4)
+
+                for i in range(len(self.choppedsubroots)):
+                    self.choppedsubroots[i].draw(colour, scale)
+
+                self.timesincechop += 1
+
 
     def draw_blink(self, i):
         delta_thickness = (1 - self.thickness_scale) * self.thickness / len(self.coords)
@@ -100,6 +127,7 @@ class Root:
 
             self.angle += 5 - random.random() * 10
             self.coords.append((prev_x + delta_x, prev_y + delta_y))
+            print(prev_x, prev_y)
 
         else:
             for i in range(len(self.subroots)):
@@ -109,7 +137,18 @@ class Root:
         pass  # modify the tree (trims the extra branches)
 
     def trim(self, x, y):
-        pass
+        for i in range(len(self.coords)):
+            if (x-self.coords[i][0]) ** 2 + (y-self.coords[i][1]) ** 2 < G.collision_thres:
+                print("CHOPPING")
+                self.choppedroot = self.coords[i:]
+                self.coords = self.coords[:i]
+                self.choppedsubroots = self.subroots
+                self.subroots = []
+                self.timesincechop = 1
+                break
+        else:
+            for i in range(len(self.subroots)):
+                self.subroots[i].trim(x,y)
 
 
 class Tree(Sprite):
@@ -150,19 +189,31 @@ def run(screen, params):
 
     root_update_counter = 0
 
+    c = pygame.Color(G.root_colour)
+
+    temp = 0
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return 0, {}
+
+        if temp == 2000: # Used for testing TODO: Delete when done
+            x,y = input("Enter trim").split()
+
+            tree.trim(int(x), int(y))
+            tree2.trim(int(x), int(y))
+            tree3.trim(int(x), int(y))
 
         screen.fill(G.bg_colour)
 
         img = pygame.image.load("./assets/tree-trunk.png")
         i2 = pygame.transform.scale(img, (75, 75))
 
-        tree.draw(G.root_colour)
-        tree2.draw(G.root_colour)
-        tree3.draw(G.root_colour)
+        c = pygame.Color(G.root_colour)
+
+        tree.draw(c)
+        tree2.draw(c)
+        tree3.draw(c)
 
 
 
@@ -181,3 +232,4 @@ def run(screen, params):
         pygame.display.flip()
         clock.tick(60)
         root_update_counter += 1
+        temp += 1
