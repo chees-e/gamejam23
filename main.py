@@ -31,7 +31,7 @@ def main():
 
     pygame.display.flip()
 
-    input()
+    # input()
 
     g = Game(screen)
     g.run()

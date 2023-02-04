@@ -8,6 +8,8 @@ import math
 import util.const as G
 
 
+# Angle: East = 0, goes CLOCKWISE
+
 class Root:
     def __init__(self, x, y, thickness, angle, maxlength, speed, depth, screen):
         self.x = x
@@ -168,10 +170,56 @@ class Tree(Sprite):
         # TODO: initialize roots
 
 
-class Player(Sprite):
-    def __init__(self):
-        Sprite.__init__(self)
-        # TODO
+class Player(pygame.sprite.DirtySprite):
+    def __init__(self, x, y, screen):
+        pygame.sprite.DirtySprite.__init__(self)
+
+        self.x = x
+        self.y = y
+        self.speed = 2
+        self.screen = screen
+        self.direction = 0
+        self.offset = 0
+
+        self.image = pygame.image.load("./assets/rat2.png")
+        self.rect = pygame.Rect(x-self.image.get_width()//2, y-self.image.get_height()//2, self.image.get_width(), self.image.get_height())
+
+
+    def turn(self, mouse):
+        mousex, mousey = mouse
+
+        target = 270
+        if mousex == self.x:
+            if mousey > self.y:
+                target = -90
+            else:
+                target = 90
+        else:
+            target = round(math.degrees(math.atan((mousey-self.y)/(mousex-self.x))))
+            if mousex<self.x:
+                target += 180
+
+        delta_angle = (self.direction - target ) % 360
+        print(target, self.direction)
+
+        # delta_angle)
+        self.direction = target
+
+        self.draw()
+
+
+    def move(self):
+        delta_x = math.cos(math.radians(self.direction)) * self.speed
+        delta_y = math.sin(math.radians(self.direction)) * self.speed
+        self.x += delta_x
+        self.y += delta_y
+        self.draw()
+
+    def draw(self):
+        rotated = pygame.transform.rotate(self.image, -self.direction - self.offset)
+        self.screen.blit(rotated,
+                         (self.x-rotated.get_width()//2, self.y - rotated.get_height()//2)) # (self.x-self.image.get_width()//2, self.y-self.image.get_height()//2))
+
 
 
 class Game:
@@ -186,6 +234,8 @@ def run(screen, params):
     tree = Root(700, 500, 20, 0, 20, 5, 1, screen)
     tree2 = Root(700, 500, 20, 120, 20, 5, 1, screen)
     tree3 = Root(700, 500, 20, 240, 20, 5, 1, screen)
+
+    rat = Player(500, 500, screen)
 
     root_update_counter = 0
 
@@ -215,7 +265,8 @@ def run(screen, params):
         tree2.draw(c)
         tree3.draw(c)
 
-
+        rat.turn(pygame.mouse.get_pos())
+        rat.move()
 
         tree.draw_blink(root_update_counter)
         tree2.draw_blink(root_update_counter)
