@@ -51,19 +51,20 @@ class Root:
 
     # param: Color
     def draw(self, colour, thickness_scale=1):
-        delta_thickness = (1 - self.thickness_scale) * self.thickness / len(self.coords)
+        if len(self.coords) > 0:
+            delta_thickness = (1 - self.thickness_scale) * self.thickness / len(self.coords)
 
-        for i in range(len(self.coords)):
-            pygame.draw.circle(self.screen, colour, self.coords[i].get(),
-                               round((self.thickness - i * delta_thickness) * thickness_scale / 2))
-            if thickness_scale < 1:
-                self.coords[i].set(self.coords[i].x + 2 - random.random() * 4, self.coords[i].y + 2 - random.random() * 4)
+            for i in range(len(self.coords)):
+                pygame.draw.circle(self.screen, colour, self.coords[i].get(),
+                                   round((self.thickness - i * delta_thickness) * thickness_scale / 2))
+                if thickness_scale < 1:
+                    self.coords[i].set(self.coords[i].x + 2 - random.random() * 4, self.coords[i].y + 2 - random.random() * 4)
 
-        for i in range(len(self.subroots)):
-            self.subroots[i].draw(colour, thickness_scale)
+            for i in range(len(self.subroots)):
+                self.subroots[i].draw(colour, thickness_scale)
 
         if self.timesincechop > 0:
-            print("FADING", self.timesincechop,round(255 - 10 * self.timesincechop))
+            # print("FADING", self.timesincechop,round(255 - 10 * self.timesincechop))
             if self.timesincechop > 60:
                 self.timesincechop = 0
                 self.choppedroot = []
@@ -145,7 +146,7 @@ class Root:
 
             self.angle += 5 - random.random() * 10
             self.coords.append(RootCoord(prev.x + delta_x, prev.y + delta_y))
-            print(prev.x, prev.y)
+            # print(prev.x, prev.y)
 
         else:
             for i in range(len(self.subroots)):
@@ -154,36 +155,73 @@ class Root:
     def collide(self, x, y):
         pass  # modify the tree (trims the extra branches)
 
+    # Returns, if wood is obtained
+    # Wood is only obtained when the root chopped has subroots
     def trim(self, x, y):
         for i in range(len(self.coords)):
             if (x-self.coords[i].x) ** 2 + (y-self.coords[i].y) ** 2 < G.collision_thres:
                 print("CHOPPING")
+                got_wood = len(self.choppedsubroots) <= 0 and len(self.subroots) > 0
+
                 self.choppedroot.extend(self.coords[i:])
                 self.coords = self.coords[:i]
                 self.choppedsubroots.extend(self.subroots)
                 self.subroots = []
                 self.timesincechop = 1
-                break
+                return got_wood
         else:
+            got_wood = False
             for i in range(len(self.subroots)):
-                self.subroots[i].trim(x,y)
+                if self.subroots[i].trim(x,y):
+                    got_wood = True
+            return got_wood
 
 
 class Tree(Sprite):
-    def __init__(self, x, y, screen):
+    def __init__(self, x, y, num_roots, screen):
         Sprite.__init__(self)
-
-        # TODO insert image
-        # self.image = pygame.Surface()
+        self.image = pygame.transform.scale(pygame.image.load("./assets/tree-trunk.png"), (75, 75))
 
         self.x = x
         self.y = y
         self.rect = self.image.get_rect()
         self.screen = screen
+        self.colour = pygame.Color(G.root_colour)
 
-        self.roots = []  # List of roots
+        self.roots = self.init_roots(num_roots)  # List of roots
 
-        # TODO: initialize roots
+    def init_roots(self, num):
+        init_angle = random.randint(0, 360)
+        delta_angle = 360//num
+        angle_error = 15
+        root_list = []
+        for i in range(num):
+            newroot = Root(self.x, self.y, G.root_thickness, init_angle, G.root_maxlength, G.root_speed, 1, self.screen)
+            init_angle = (init_angle + random.randint(delta_angle-angle_error, delta_angle+angle_error)) % 360
+            root_list.append(newroot)
+        # todo: add groups? maybe
+        return root_list
+
+    def draw(self, blink_counter):
+        for i in range(len(self.roots)):
+            self.roots[i].draw(self.colour)
+
+        for i in range(len(self.roots)):
+            self.roots[i].draw_blink(blink_counter)
+
+        self.screen.blit(self.image, (self.x - self.image.get_width() // 2, self.y - self.image.get_height() // 2))
+
+    def trim(self, x, y):
+        wood = 0
+        for i in range(len(self.roots)):
+            if self.roots[i].trim(x, y):
+                wood += 1
+
+        return wood
+
+    def extend(self):
+        for i in range(len(self.roots)):
+            self.roots[i].extend()
 
 
 class Player(pygame.sprite.DirtySprite):
@@ -242,6 +280,7 @@ class Player(pygame.sprite.DirtySprite):
 
         return x,y
 
+
 class Game:
     def __init__(self, screen):
         self.trees = []
@@ -251,58 +290,37 @@ class Game:
 def run(screen, params):
     clock = pygame.time.Clock()
 
-    tree = Root(700, 500, 20, 0, 20, 5, 1, screen)
-    tree2 = Root(700, 500, 20, 120, 20, 5, 1, screen)
-    tree3 = Root(700, 500, 20, 240, 20, 5, 1, screen)
+    tree = Tree(700, 500, 4, screen)
+    # tree = Root(700, 500, 20, 0, 20, 5, 1, screen)
+    # tree2 = Root(700, 500, 20, 120, 20, 5, 1, screen)
+    # tree3 = Root(700, 500, 20, 240, 20, 5, 1, screen)
 
     rat = Player(500, 500, screen)
 
     root_update_counter = 0
 
-    c = pygame.Color(G.root_colour)
-
-    temp = 0
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return 0, {}
 
-        #if temp == 2000: # Used for testing TODO: Delete when done
-        #    x,y = input("Enter trim").split()
+        screen.fill(G.bg_colour)
 
         px, py = rat.get_mouth()
-        tree.trim(px, py)
-        tree2.trim(px, py)
-        tree3.trim(px, py)
-
-        screen.fill(G.bg_colour)
+        woods_obtained = tree.trim(px, py)
+        if woods_obtained > 0:
+            print("WOODS OBTAINED:", woods_obtained)
         # pygame.draw.circle(screen, "red", (px,py), 10) # makes the rat looks like a clown
 
-        img = pygame.image.load("./assets/tree-trunk.png")
-        i2 = pygame.transform.scale(img, (75, 75))
+        tree.draw(root_update_counter)
 
-        c = pygame.Color(G.root_colour)
-
-        tree.draw(c)
-        tree2.draw(c)
-        tree3.draw(c)
-
-        tree.draw_blink(root_update_counter)
-        tree2.draw_blink(root_update_counter)
-        tree3.draw_blink(root_update_counter)
+        if root_update_counter >= G.root_counter_max:
+            tree.extend()
+            root_update_counter = 0
 
         rat.turn(pygame.mouse.get_pos())
         rat.move()
 
-        screen.blit(i2, (700 - 37.5, 500 - 37.5))
-
-        if root_update_counter >= G.root_counter_max:
-            tree.extend()
-            tree2.extend()
-            tree3.extend()
-            root_update_counter = 0
-
         pygame.display.flip()
         clock.tick(60)
         root_update_counter += 1
-        temp += 1
