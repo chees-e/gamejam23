@@ -281,6 +281,7 @@ class Player(pygame.sprite.DirtySprite):
         self.screen = screen
         self.direction = 0
         self.offset = 0
+        self.energy = 100
 
         self.image = pygame.image.load("./assets/rat3.png")
         self.rect = pygame.Rect(x - self.image.get_width() // 2, y - self.image.get_height() // 2,
@@ -390,6 +391,7 @@ def run(screen, params):
 
         # the root depth if mouse is currently hovering over one
         hover_root_depth = tree.contains(mx, my)
+        wood_colour = "black"
 
         if pygame.mouse.get_pressed(3)[0] and rat.near_mouse() and hover_root_depth > 0:
             if chopping_meter == 0:
@@ -400,6 +402,7 @@ def run(screen, params):
                     chopping_meter = -1
 
             chopping_meter += 1
+            rat.energy -= G.extra_energy_lost
             pygame.draw.line(screen, power_colour[hover_root_depth],
                              (round(rat.x) - rat.image.get_width() // 2, round(rat.y) - rat.image.get_height()),
                              (round(rat.x - rat.image.get_width() // 2 + rat.image.get_width() * (
@@ -425,9 +428,21 @@ def run(screen, params):
                 img = pygame.transform.scale(pygame.image.load("./assets/wood_1fab5.png"), (50, 50))
                 screen.blit(img, (text.x - rat.image.get_width() / 4, text.y - rat.image.get_height() / 4))
                 text.draw("white", 30)
+                wood_colour = "green"
 
         wood = Text(25, 50, f"Wood: {total_wood}", 99, screen)
-        wood.draw("black", 30)
+        wood.draw(wood_colour, 30)
+        if wood_colour == "green":
+            wood_colour = "black"
+
+        energy = Text(25, 100, f"Energy: {round(rat.energy)}", 99, screen)
+        if chopping_meter > 0:
+            energy.draw("red", 32)
+        elif not rat.near_mouse():
+            energy.draw("orange", 30)
+        else:
+            energy.draw("black", 30)
+
 
         if hover_root_depth > 0:
             pygame.draw.circle(screen, power_colour[hover_root_depth], (mx, my), 10)  # makes the rat looks like a clown
@@ -441,7 +456,10 @@ def run(screen, params):
             rat.move(0.5)
         else:
             rat.move(2)
-
+        if not rat.near_mouse():
+            rat.energy -= G.energy_lost
+        else:
+            rat.energy -= G.energy_lost/2
         pygame.display.flip()
         clock.tick(60)
         root_update_counter += 1
