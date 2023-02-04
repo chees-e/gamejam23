@@ -22,7 +22,6 @@ class Text:
     def draw(self, x, y):
         render = self.font.render(self.content, True, G.text_colour)
         self.screen.blit(render, (x, y))
-        print("drawn")
         self.timeleft -= 1
 
 
@@ -276,12 +275,11 @@ class Player(pygame.sprite.DirtySprite):
 
         self.x = x
         self.y = y
-        self.speed = 2
         self.screen = screen
         self.direction = 0
         self.offset = 0
 
-        self.image = pygame.image.load("./assets/rat2.png")
+        self.image = pygame.image.load("./assets/rat3.png")
         self.rect = pygame.Rect(x-self.image.get_width()//2, y-self.image.get_height()//2, self.image.get_width(), self.image.get_height())
 
         self.trail = []
@@ -312,9 +310,9 @@ class Player(pygame.sprite.DirtySprite):
         mx, my = pygame.mouse.get_pos()
         return (self.x-mx)**2 + (self.y-my)**2 <= (self.image.get_width()//2 + 10)**2
 
-    def move(self):
-        delta_x = math.cos(math.radians(self.direction)) * self.speed
-        delta_y = math.sin(math.radians(self.direction)) * self.speed
+    def move(self, speed):
+        delta_x = math.cos(math.radians(self.direction)) * speed
+        delta_y = math.sin(math.radians(self.direction)) * speed
 
         mx, my = pygame.mouse.get_pos()
 
@@ -366,8 +364,8 @@ def run(screen, params):
     chopping_location = (0,0)
     chopping_depth = 0
     
-    required_power = [1, 300, 120, 60, 20, 1, 1] # for chopping trees
-    power_colour = ["black", "red", "orange", "yellow", "green", "black", "black"]
+    required_power = [1, 300, 120, 60, 20, 5, 1] # for chopping trees
+    power_colour = ["black", "red", "orange", "yellow", "green", "cyan", "black"]
 
     display_text = []
 
@@ -423,7 +421,10 @@ def run(screen, params):
             root_update_counter = 0
 
         rat.turn(pygame.mouse.get_pos())
-        rat.move()
+        if tree.contains(px, py):
+            rat.move(0.5)
+        else:
+            rat.move(2)
 
         pygame.display.flip()
         clock.tick(60)
