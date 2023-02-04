@@ -33,6 +33,6 @@ menu.add.image('../assets/onlyclowns_transparent.png', scale=(0.5, 0.5))
 menu.add.button('Play', start)
 menu.add.button('Settings', settings)
 menu.add.button('Credits', credits)
-menu.add.button('Quit', pygame_menu.events.EXIT)
+menu.add.button('Quit', pygame_menu.events.EXIT) #letsfuckinggoooo
 
 menu.mainloop(surface)
