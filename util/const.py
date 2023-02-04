@@ -17,6 +17,9 @@ extend_chance = 0.8
 wood_double_chance = 0.1
 wood_lost_chance = 0.3
 
+energy_lost = 0.03
+extra_energy_lost = 0.05
+
 font_size = 24
 
 trail_colour = "brown" #TODO select better colour
