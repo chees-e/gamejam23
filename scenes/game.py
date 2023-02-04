@@ -13,15 +13,15 @@ import util.const as G
 
 # TODO, make a new group
 class Text:
-    def __init__(self, content, timeleft, screen, x, y):
+    def __init__(self, x, y, content, timeleft, screen):
+        self.x = x
+        self.y = y
         self.content = content
         self.screen = screen
         self.timeleft = timeleft
-        self.x = x
-        self.y = y
 
-    def draw(self, color, font_size):
-        render = pygame.font.SysFont(None, font_size).render(self.content, True, color)
+    def draw(self, colour, font_size):
+        render = pygame.font.SysFont(None, font_size).render(self.content, True, colour)
         self.screen.blit(render, (self.x, self.y))
         self.timeleft -= 1
 
@@ -100,7 +100,7 @@ class Root:
 
                 self.timesincechop += 1
 
-    def draw_pulse(self, i):
+    def draw_blink(self, i):
         if len(self.coords) > 0:
             delta_thickness = (1 - self.thickness_scale) * self.thickness / len(self.coords)
 
@@ -111,7 +111,7 @@ class Root:
                                    round((self.thickness - index * delta_thickness) / 2) + 1)
 
             for j in range(len(self.subroots)):
-                self.subroots[j].draw_pulse(i)
+                self.subroots[j].draw_blink(i)
 
     def extend(self):
         # TODO: take care of the branching out
@@ -178,14 +178,14 @@ class Root:
     # Wood is only obtained when the root chopped has subroots
     def trim(self, x, y):
         for i in range(len(self.coords)):
-            if (x-self.coords[i].x) ** 2 + (y-self.coords[i].y) ** 2 < G.collision_thres:
+            if (x - self.coords[i].x) ** 2 + (y - self.coords[i].y) ** 2 < G.collision_thres:
                 print("CHOPPING")
                 got_wood = len(self.choppedsubroots) <= 0 and len(self.subroots) > 0
 
                 self.choppedroot.extend(self.coords[i:])
                 self.coords = self.coords[:i]
                 if len(self.coords) > 0:
-                    self.alive = True # Remove this if the branch needs to stay dead
+                    self.alive = True  # Remove this if the branch needs to stay dead
                 self.choppedsubroots.extend(self.subroots)
                 self.subroots = []
                 self.timesincechop = 1
@@ -193,19 +193,19 @@ class Root:
         else:
             got_wood = False
             for i in range(len(self.subroots)):
-                if self.subroots[i].trim(x,y):
+                if self.subroots[i].trim(x, y):
                     got_wood = True
             return got_wood
-        
+
     # Returns the depth if x,y are within a root
     def contains(self, x, y):
         for i in range(len(self.coords)):
-            if (x-self.coords[i].x) ** 2 + (y-self.coords[i].y) ** 2 < G.collision_thres:
+            if (x - self.coords[i].x) ** 2 + (y - self.coords[i].y) ** 2 < G.collision_thres:
                 return self.depth
         else:
             contains = 0
             for i in range(len(self.subroots)):
-                cur = self.subroots[i].contains(x,y)
+                cur = self.subroots[i].contains(x, y)
                 if cur > 0:
                     contains = cur
             return contains
@@ -226,12 +226,12 @@ class Tree(Sprite):
 
     def init_roots(self, num):
         init_angle = random.randint(0, 360)
-        delta_angle = 360//num
+        delta_angle = 360 // num
         angle_error = 15
         root_list = []
         for i in range(num):
             newroot = Root(self.x, self.y, G.root_thickness, init_angle, G.root_maxlength, G.root_speed, 1, self.screen)
-            init_angle = (init_angle + random.randint(delta_angle-angle_error, delta_angle+angle_error)) % 360
+            init_angle = (init_angle + random.randint(delta_angle - angle_error, delta_angle + angle_error)) % 360
             root_list.append(newroot)
         # todo: add groups? maybe
         return root_list
@@ -241,7 +241,7 @@ class Tree(Sprite):
             self.roots[i].draw(self.colour)
 
         for i in range(len(self.roots)):
-            self.roots[i].draw_pulse(blink_counter)
+            self.roots[i].draw_blink(blink_counter)
 
         self.screen.blit(self.image, (self.x - self.image.get_width() // 2, self.y - self.image.get_height() // 2))
 
@@ -270,7 +270,7 @@ class Tree(Sprite):
             if cur > 0:
                 contains = cur
         return contains
-        
+
 
 class Player(pygame.sprite.DirtySprite):
     def __init__(self, x, y, screen):
@@ -283,8 +283,9 @@ class Player(pygame.sprite.DirtySprite):
         self.direction = 0
         self.offset = 0
 
-        self.image = pygame.image.load("./assets/rat3.png")
-        self.rect = pygame.Rect(x-self.image.get_width()//2, y-self.image.get_height()//2, self.image.get_width(), self.image.get_height())
+        self.image = pygame.image.load("./assets/rat2.png")
+        self.rect = pygame.Rect(x - self.image.get_width() // 2, y - self.image.get_height() // 2,
+                                self.image.get_width(), self.image.get_height())
 
         self.trail = []
         self.traillength = 30
@@ -314,9 +315,9 @@ class Player(pygame.sprite.DirtySprite):
         mx, my = pygame.mouse.get_pos()
         return (self.x - mx) ** 2 + (self.y - my) ** 2 <= (self.image.get_width() // 2 + 10) ** 2
 
-    def move(self, speed):
-        delta_x = math.cos(math.radians(self.direction)) * speed
-        delta_y = math.sin(math.radians(self.direction)) * speed
+    def move(self):
+        delta_x = math.cos(math.radians(self.direction)) * self.speed
+        delta_y = math.sin(math.radians(self.direction)) * self.speed
 
         mx, my = pygame.mouse.get_pos()
 
@@ -332,18 +333,19 @@ class Player(pygame.sprite.DirtySprite):
 
     def draw(self):
         for i in range(len(self.trail)):
-            pygame.draw.circle(self.screen, G.trail_colour, self.trail[i], self.image.get_width()//(i+3))
+            pygame.draw.circle(self.screen, G.trail_colour, self.trail[i], self.image.get_width() // (i + 3))
 
         rotated = pygame.transform.rotate(self.image, -self.direction - self.offset)
         self.screen.blit(rotated,
-                         (self.x-rotated.get_width()//2, self.y - rotated.get_height()//2)) # (self.x-self.image.get_width()//2, self.y-self.image.get_height()//2))
+                         (self.x - rotated.get_width() // 2,
+                          self.y - rotated.get_height() // 2))  # (self.x-self.image.get_width()//2, self.y-self.image.get_height()//2))
 
     def get_mouth(self):
-        radius = self.image.get_width()//2
+        radius = self.image.get_width() // 2
         x = self.x + radius * math.cos(math.radians(self.direction))
         y = self.y + radius * math.sin(math.radians(self.direction))
 
-        return x,y
+        return x, y
 
 
 class Game:
@@ -365,13 +367,13 @@ def run(screen, params):
     root_update_counter = 0
 
     chopping_meter = 0
-    chopping_location = (0,0)
+    chopping_location = (0, 0)
     chopping_depth = 0
 
     total_wood = 0
 
-    required_power = [1, 300, 120, 60, 20, 5, 1] # for chopping trees
-    power_colour = ["black", "red", "orange", "yellow", "green", "cyan", "black"]
+    required_power = [1, 300, 120, 60, 20, 1, 1]  # for chopping trees
+    power_colour = ["black", "red", "orange", "yellow", "green", "black", "black"]
 
     display_text = []
 
@@ -395,21 +397,25 @@ def run(screen, params):
                 chopping_location = (mx, my)
                 chopping_depth = hover_root_depth
             else:
-                if (mx-chopping_location[0]) ** 2 + (my - chopping_location[1]) ** 2 > 4:
+                if (mx - chopping_location[0]) ** 2 + (my - chopping_location[1]) ** 2 > 4:
                     chopping_meter = -1
 
             chopping_meter += 1
-            pygame.draw.line(screen, power_colour[hover_root_depth] , (round(rat.x) - rat.image.get_width()//2, round(rat.y)- rat.image.get_height()),
-                             (round(rat.x - rat.image.get_width()//2 + rat.image.get_width() * (chopping_meter/required_power[hover_root_depth])), 
-                              round(rat.y)- rat.image.get_height()), 10) 
+            pygame.draw.line(screen, power_colour[hover_root_depth],
+                             (round(rat.x) - rat.image.get_width() // 2, round(rat.y) - rat.image.get_height()),
+                             (round(rat.x - rat.image.get_width() // 2 + rat.image.get_width() * (
+                                         chopping_meter / required_power[hover_root_depth])),
+                              round(rat.y) - rat.image.get_height()), 10)
 
             if chopping_meter > required_power[hover_root_depth]:
                 chopping_meter = 0
-                woods_obtained = tree.trim(chopping_location[0], chopping_location[1])
-                if woods_obtained > 0:
-                    print("WOODS OBTAINED:", woods_obtained)
-                    display_text.append(Text(f"Woods obtained: {woods_obtained}", 60, screen))
+                wood_obtained = tree.trim(chopping_location[0], chopping_location[1])
+                if wood_obtained > 0:
+                    display_text.append(
+                        Text(round(rat.x) - rat.image.get_width() / 4, round(rat.y) - rat.image.get_height(),
+                             f"+{wood_obtained}", 60, screen))
                 # pygame.draw.circle(screen, "red", (px,py), 10) # makes the rat looks like a clown
+                total_wood += wood_obtained
         else:
             chopping_meter = 0
 
@@ -417,7 +423,12 @@ def run(screen, params):
             if text.timeleft <= 0:
                 display_text.remove(text)
             else:
-                text.draw(round(rat.x) - rat.image.get_width()//2, round(rat.y)- rat.image.get_height())
+                img = pygame.transform.scale(pygame.image.load("./assets/wood_1fab5.png"), (50, 50))
+                screen.blit(img, (text.x - rat.image.get_width() / 4, text.y - rat.image.get_height() / 4))
+                text.draw("white", 30)
+
+        wood = Text(25, 50, f"Wood: {total_wood}", 99, screen)
+        wood.draw("black", 30)
 
         if hover_root_depth > 0:
             pygame.draw.circle(screen, "red", (mx, my), 10)  # makes the rat looks like a clown
