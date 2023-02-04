@@ -15,7 +15,7 @@ class Game:
         print("Game started")
 
     def run(self):
-        next_scene = 0
+        next_scene = 1
         params = {}
         while True:
             next_scene, params = self.scenes[next_scene].run(self.screen, params)
@@ -27,6 +27,8 @@ def main():
     pygame.display.set_caption("Insert game name")
     screen = pygame.display.set_mode(G.size)
     # add other screen intialization
+    screen.fill(G.bg_colour)
+
     pygame.display.flip()
 
     input()
