@@ -416,7 +416,7 @@ def run(screen, params):
             if chopping_meter > required_power[hover_root_depth]:
                 chopping_meter = 0
                 wood_obtained = tree.trim(chopping_location[0], chopping_location[1])
-                rat.stamina -= (len(required_power) - hover_root_depth) * rat.max_stamina / 8
+                rat.stamina -= 2 ** (len(required_power) - hover_root_depth + 2)
                 if wood_obtained > 0:
                     display_text.append(
                         Text(round(rat.x) - rat.image.get_width() / 4, round(rat.y) - rat.image.get_height(),
