@@ -12,6 +12,19 @@ import util.const as G
 
 
 # TODO, make a new group
+class Text:
+    def __init__(self, content, timeleft, screen):
+        self.content = content
+        self.screen = screen
+        self.timeleft = timeleft
+        self.font = pygame.font.SysFont(None, G.font_size)
+
+    def draw(self, x, y):
+        render = self.font.render(self.content, True, G.text_colour)
+        self.screen.blit(render, (x, y))
+        self.timeleft -= 1
+
+
 class RootCoord(Sprite):
     def __init__(self, x, y):
         Sprite.__init__(self)
@@ -69,7 +82,9 @@ class Root:
                 self.timesincechop = 0
                 self.choppedroot = []
                 self.choppedsubroots = []
-            else:
+            elif len(self.choppedroot) > 0:
+                delta_thickness = (1 - self.thickness_scale) * self.thickness / len(self.choppedroot)
+
                 # smh they cant draw transparent
                 scale = 0.98**self.timesincechop
                 for i in range(len(self.choppedroot)):
@@ -82,22 +97,25 @@ class Root:
 
                 self.timesincechop += 1
 
-
     def draw_blink(self, i):
-        delta_thickness = (1 - self.thickness_scale) * self.thickness / len(self.coords)
+        if len(self.coords) > 0:
+            delta_thickness = (1 - self.thickness_scale) * self.thickness / len(self.coords)
 
-        index = round(i * (len(self.coords) - 1) / G.root_counter_max)
+            index = round(i * (len(self.coords) - 1) / G.root_counter_max)
 
-        if index != G.root_counter_max and index != len(self.coords) - 1:
-            pygame.draw.circle(self.screen, G.root_colour, self.coords[index].get(),
-                           round((self.thickness - index * delta_thickness) / 2) + 1)
+            if index != G.root_counter_max and index != len(self.coords) - 1:
+                pygame.draw.circle(self.screen, G.root_colour, self.coords[index].get(),
+                               round((self.thickness - index * delta_thickness) / 2) + 1)
 
-        for j in range(len(self.subroots)):
-            self.subroots[j].draw_blink(i)
+            for j in range(len(self.subroots)):
+                self.subroots[j].draw_blink(i)
 
     def extend(self):
         # TODO: take care of the branching out
         #   add to subroots, kill this root
+        if len(self.coords) <= 0:
+            return
+
         prev = self.coords[-1]
 
         # if self.x <= 0 or self.x >= 600 or self.y <= 0 or self.y >= 600:
@@ -150,10 +168,8 @@ class Root:
 
         else:
             for i in range(len(self.subroots)):
-                self.subroots[i].extend()
-
-    def collide(self, x, y):
-        pass  # modify the tree (trims the extra branches)
+                if random.random() < G.extend_chance:
+                    self.subroots[i].extend()
 
     # Returns, if wood is obtained
     # Wood is only obtained when the root chopped has subroots
@@ -165,6 +181,8 @@ class Root:
 
                 self.choppedroot.extend(self.coords[i:])
                 self.coords = self.coords[:i]
+                if len(self.coords) > 0:
+                    self.alive = True # Remove this if the branch needs to stay dead
                 self.choppedsubroots.extend(self.subroots)
                 self.subroots = []
                 self.timesincechop = 1
@@ -175,6 +193,19 @@ class Root:
                 if self.subroots[i].trim(x,y):
                     got_wood = True
             return got_wood
+        
+    # Returns the depth if x,y are within a root
+    def contains(self, x, y):
+        for i in range(len(self.coords)):
+            if (x-self.coords[i].x) ** 2 + (y-self.coords[i].y) ** 2 < G.collision_thres:
+                return self.depth
+        else:
+            contains = 0
+            for i in range(len(self.subroots)):
+                cur = self.subroots[i].contains(x,y)
+                if cur > 0:
+                    contains = cur
+            return contains
 
 
 class Tree(Sprite):
@@ -217,12 +248,26 @@ class Tree(Sprite):
             if self.roots[i].trim(x, y):
                 wood += 1
 
+        if wood > 0:
+            if random.random() < G.wood_double_chance:
+                wood = 2
+            if random.random() < G.wood_lost_chance:
+                wood = 0
+
         return wood
 
     def extend(self):
         for i in range(len(self.roots)):
             self.roots[i].extend()
 
+    def contains(self, x, y):
+        contains = 0
+        for i in range(len(self.roots)):
+            cur = self.roots[i].contains(x, y)
+            if cur > 0:
+                contains = cur
+        return contains
+        
 
 class Player(pygame.sprite.DirtySprite):
     def __init__(self, x, y, screen):
@@ -230,45 +275,61 @@ class Player(pygame.sprite.DirtySprite):
 
         self.x = x
         self.y = y
-        self.speed = 2
         self.screen = screen
         self.direction = 0
         self.offset = 0
 
-        self.image = pygame.image.load("./assets/rat2.png")
+        self.image = pygame.image.load("./assets/rat3.png")
         self.rect = pygame.Rect(x-self.image.get_width()//2, y-self.image.get_height()//2, self.image.get_width(), self.image.get_height())
 
+        self.trail = []
+        self.traillength = 30
 
     def turn(self, mouse):
-        mousex, mousey = mouse
+        mx, my = mouse
 
         target = 270
-        if mousex == self.x:
-            if mousey > self.y:
+        if mx == self.x:
+            if my > self.y:
                 target = -90
             else:
                 target = 90
         else:
-            target = round(math.degrees(math.atan((mousey-self.y)/(mousex-self.x))))
-            if mousex<self.x:
+            target = round(math.degrees(math.atan((my-self.y)/(mx-self.x))))
+            if mx<self.x:
                 target += 180
 
-        delta_angle = (self.direction - target ) % 360
+        delta_angle = (self.direction - target) % 360
 
         # delta_angle)
         self.direction = target
 
         self.draw()
 
+    def near_mouse(self):
+        mx, my = pygame.mouse.get_pos()
+        return (self.x-mx)**2 + (self.y-my)**2 <= (self.image.get_width()//2 + 10)**2
 
-    def move(self):
-        delta_x = math.cos(math.radians(self.direction)) * self.speed
-        delta_y = math.sin(math.radians(self.direction)) * self.speed
-        self.x += delta_x
-        self.y += delta_y
+    def move(self, speed):
+        delta_x = math.cos(math.radians(self.direction)) * speed
+        delta_y = math.sin(math.radians(self.direction)) * speed
+
+        mx, my = pygame.mouse.get_pos()
+
+        if not self.near_mouse():
+            self.trail.insert(0, (self.x, self.y))
+            if len(self.trail) > self.traillength:
+                self.trail.pop()
+
+            self.x += delta_x
+            self.y += delta_y
+
         self.draw()
 
     def draw(self):
+        for i in range(len(self.trail)):
+            pygame.draw.circle(self.screen, G.trail_colour, self.trail[i], self.image.get_width()//(i+3))
+
         rotated = pygame.transform.rotate(self.image, -self.direction - self.offset)
         self.screen.blit(rotated,
                          (self.x-rotated.get_width()//2, self.y - rotated.get_height()//2)) # (self.x-self.image.get_width()//2, self.y-self.image.get_height()//2))
@@ -299,6 +360,15 @@ def run(screen, params):
 
     root_update_counter = 0
 
+    chopping_meter = 0
+    chopping_location = (0,0)
+    chopping_depth = 0
+    
+    required_power = [1, 300, 120, 60, 20, 5, 1] # for chopping trees
+    power_colour = ["black", "red", "orange", "yellow", "green", "cyan", "black"]
+
+    display_text = []
+
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -307,19 +377,54 @@ def run(screen, params):
         screen.fill(G.bg_colour)
 
         px, py = rat.get_mouth()
-        woods_obtained = tree.trim(px, py)
-        if woods_obtained > 0:
-            print("WOODS OBTAINED:", woods_obtained)
-        # pygame.draw.circle(screen, "red", (px,py), 10) # makes the rat looks like a clown
+        mx, my = pygame.mouse.get_pos()
 
         tree.draw(root_update_counter)
+
+        # the root depth if mouse is currently hovering over one
+        hover_root_depth = tree.contains(mx, my)
+
+        if pygame.mouse.get_pressed(3)[0] and rat.near_mouse() and hover_root_depth > 0:
+            if chopping_meter == 0:
+                chopping_location = (mx, my)
+                chopping_depth = hover_root_depth
+            else:
+                if (mx-chopping_location[0]) ** 2 + (my - chopping_location[1]) ** 2 > 4:
+                    chopping_meter = -1
+
+            chopping_meter += 1
+            pygame.draw.line(screen, power_colour[hover_root_depth] , (round(rat.x) - rat.image.get_width()//2, round(rat.y)- rat.image.get_height()),
+                             (round(rat.x - rat.image.get_width()//2 + rat.image.get_width() * (chopping_meter/required_power[hover_root_depth])), 
+                              round(rat.y)- rat.image.get_height()), 10) 
+
+            if chopping_meter > required_power[hover_root_depth]:
+                chopping_meter = 0
+                woods_obtained = tree.trim(chopping_location[0], chopping_location[1])
+                if woods_obtained > 0:
+                    print("WOODS OBTAINED:", woods_obtained)
+                    display_text.append(Text(f"Woods obtained: {woods_obtained}", 60, screen))
+                # pygame.draw.circle(screen, "red", (px,py), 10) # makes the rat looks like a clown
+        else:
+            chopping_meter = 0
+
+        for text in display_text:
+            if text.timeleft <= 0:
+                display_text.remove(text)
+            else:
+                text.draw(round(rat.x) - rat.image.get_width()//2, round(rat.y)- rat.image.get_height())
+
+        if hover_root_depth > 0:
+            pygame.draw.circle(screen, "red", (mx, my), 10)  # makes the rat looks like a clown
 
         if root_update_counter >= G.root_counter_max:
             tree.extend()
             root_update_counter = 0
 
         rat.turn(pygame.mouse.get_pos())
-        rat.move()
+        if tree.contains(px, py):
+            rat.move(0.5)
+        else:
+            rat.move(2)
 
         pygame.display.flip()
         clock.tick(60)
