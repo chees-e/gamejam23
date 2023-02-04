@@ -278,7 +278,6 @@ class Player(pygame.sprite.DirtySprite):
 
         self.x = x
         self.y = y
-        self.speed = 2
         self.screen = screen
         self.direction = 0
         self.offset = 0
@@ -372,8 +371,8 @@ def run(screen, params):
 
     total_wood = 0
 
-    required_power = [1, 300, 120, 60, 20, 1, 1]  # for chopping trees
-    power_colour = ["black", "red", "orange", "yellow", "green", "black", "black"]
+    required_power = [1, 300, 120, 60, 20, 5, 1]  # for chopping trees
+    power_colour = ["black", "red", "orange", "yellow", "green", "cyan", "black"]
 
     display_text = []
 
@@ -431,7 +430,7 @@ def run(screen, params):
         wood.draw("black", 30)
 
         if hover_root_depth > 0:
-            pygame.draw.circle(screen, "red", (mx, my), 10)  # makes the rat looks like a clown
+            pygame.draw.circle(screen, power_colour[hover_root_depth], (mx, my), 10)  # makes the rat looks like a clown
 
         if root_update_counter >= G.root_counter_max:
             tree.extend()
