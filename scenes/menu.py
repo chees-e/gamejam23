@@ -7,8 +7,15 @@ import pygame_menu
 # Entry point
 def run(screen, params):
     while True:
-        input("IN menu")
-        return 1, {}
+        menu = pygame_menu.Menu('', 1500, 900)
+
+        menu.add.image('./assets/onlyclowns_transparent.png', scale=(0.5, 0.5))
+        menu.add.button('Play', start)
+        menu.add.button('Settings', settings)
+        menu.add.button('Credits', credits)
+        menu.add.button('Quit', pygame_menu.events.EXIT)  # letsfuckinggoooo
+
+        menu.mainloop(surface)
 
 # init pygame
 pygame.init()
@@ -17,7 +24,7 @@ surface = pygame.display.set_mode((1500, 900))
 #define buttons
 def start():
     # idk
-    pass
+    return 1, {}
 
 def settings():
     #open the settings menu
@@ -26,13 +33,3 @@ def settings():
 def credits():
     #open the credits page
     pass
-
-menu = pygame_menu.Menu('', 1500, 900)
-
-menu.add.image('../assets/onlyclowns_transparent.png', scale=(0.5, 0.5))
-menu.add.button('Play', start)
-menu.add.button('Settings', settings)
-menu.add.button('Credits', credits)
-menu.add.button('Quit', pygame_menu.events.EXIT) #letsfuckinggoooo
-
-menu.mainloop(surface)
