@@ -12,6 +12,20 @@ import util.const as G
 
 
 # TODO, make a new group
+class Text:
+    def __init__(self, content, timeleft, screen):
+        self.content = content
+        self.screen = screen
+        self.timeleft = timeleft
+        self.font = pygame.font.SysFont(None, G.font_size)
+
+    def draw(self, x, y):
+        render = self.font.render(self.content, True, G.text_colour)
+        self.screen.blit(render, (x, y))
+        print("drawn")
+        self.timeleft -= 1
+
+
 class RootCoord(Sprite):
     def __init__(self, x, y):
         Sprite.__init__(self)
@@ -155,7 +169,8 @@ class Root:
 
         else:
             for i in range(len(self.subroots)):
-                self.subroots[i].extend()
+                if random.random() < G.extend_chance:
+                    self.subroots[i].extend()
 
     # Returns, if wood is obtained
     # Wood is only obtained when the root chopped has subroots
@@ -167,6 +182,8 @@ class Root:
 
                 self.choppedroot.extend(self.coords[i:])
                 self.coords = self.coords[:i]
+                if len(self.coords) > 0:
+                    self.alive = True # Remove this if the branch needs to stay dead
                 self.choppedsubroots.extend(self.subroots)
                 self.subroots = []
                 self.timesincechop = 1
@@ -232,6 +249,12 @@ class Tree(Sprite):
             if self.roots[i].trim(x, y):
                 wood += 1
 
+        if wood > 0:
+            if random.random() < G.wood_double_chance:
+                wood = 2
+            if random.random() < G.wood_lost_chance:
+                wood = 0
+
         return wood
 
     def extend(self):
@@ -287,7 +310,7 @@ class Player(pygame.sprite.DirtySprite):
 
     def near_mouse(self):
         mx, my = pygame.mouse.get_pos()
-        return (self.x-mx)**2 + (self.y-my)**2 <= (self.image.get_width()//2 + 5)**2
+        return (self.x-mx)**2 + (self.y-my)**2 <= (self.image.get_width()//2 + 10)**2
 
     def move(self):
         delta_x = math.cos(math.radians(self.direction)) * self.speed
@@ -343,8 +366,11 @@ def run(screen, params):
     chopping_location = (0,0)
     chopping_depth = 0
     
-    required_power = [0, 300, 120, 60, 20, 0, 0] # for chopping trees
+    required_power = [1, 300, 120, 60, 20, 1, 1] # for chopping trees
     power_colour = ["black", "red", "orange", "yellow", "green", "black", "black"]
+
+    display_text = []
+
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -378,9 +404,16 @@ def run(screen, params):
                 woods_obtained = tree.trim(chopping_location[0], chopping_location[1])
                 if woods_obtained > 0:
                     print("WOODS OBTAINED:", woods_obtained)
+                    display_text.append(Text(f"Woods obtained: {woods_obtained}", 60, screen))
                 # pygame.draw.circle(screen, "red", (px,py), 10) # makes the rat looks like a clown
         else:
             chopping_meter = 0
+
+        for text in display_text:
+            if text.timeleft <= 0:
+                display_text.remove(text)
+            else:
+                text.draw(round(rat.x) - rat.image.get_width()//2, round(rat.y)- rat.image.get_height())
 
         if hover_root_depth > 0:
             pygame.draw.circle(screen, "red", (mx, my), 10)  # makes the rat looks like a clown

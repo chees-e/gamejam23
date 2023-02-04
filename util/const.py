@@ -13,8 +13,14 @@ root_thickness = 20
 root_maxlength = 20
 root_speed = 5
 
-trail_colour = "brown" #TODO select better colour
+extend_chance = 0.8
+wood_double_chance = 0.1
+wood_lost_chance = 0.3
 
+font_size = 24
+
+trail_colour = "brown" #TODO select better colour
+text_colour = "black"
 bg_colour = "white"
 
 collision_thres = 20 # distance sqaured
