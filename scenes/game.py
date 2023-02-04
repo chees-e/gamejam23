@@ -10,6 +10,22 @@ import util.const as G
 
 # Angle: East = 0, goes CLOCKWISE
 
+
+# TODO, make a new group
+class RootCoord(Sprite):
+    def __init__(self, x, y):
+        Sprite.__init__(self)
+        self.x = x
+        self.y = y
+
+    def get(self):
+        return (round(self.x), round(self.y))
+
+    def set(self, x, y):
+        self.x = x
+        self.y = y
+
+
 class Root:
     def __init__(self, x, y, thickness, angle, maxlength, speed, depth, screen):
         self.x = x
@@ -26,7 +42,7 @@ class Root:
         self.depth = depth
         self.maxdepth = 4
 
-        self.coords = [(x, y)]
+        self.coords = [RootCoord(x, y)]
         self.subroots = []  # list of roots
 
         self.choppedroot = []
@@ -38,13 +54,13 @@ class Root:
         delta_thickness = (1 - self.thickness_scale) * self.thickness / len(self.coords)
 
         for i in range(len(self.coords)):
-            pygame.draw.circle(self.screen, colour, list(map(round, self.coords[i])),
+            pygame.draw.circle(self.screen, colour, self.coords[i].get(),
                                round((self.thickness - i * delta_thickness) * thickness_scale / 2))
             if thickness_scale < 1:
-                self.coords[i] = (self.coords[i][0] + 2 - random.random() * 4, self.coords[i][1] + 2 - random.random() * 4)
+                self.coords[i].set(self.coords[i].x + 2 - random.random() * 4, self.coords[i].y + 2 - random.random() * 4)
 
         for i in range(len(self.subroots)):
-            self.subroots[i].draw(colour)
+            self.subroots[i].draw(colour, thickness_scale)
 
         if self.timesincechop > 0:
             print("FADING", self.timesincechop,round(255 - 10 * self.timesincechop))
@@ -56,9 +72,9 @@ class Root:
                 # smh they cant draw transparent
                 scale = 0.98**self.timesincechop
                 for i in range(len(self.choppedroot)):
-                    pygame.draw.circle(self.screen, colour, list(map(round, self.choppedroot[i])),
+                    pygame.draw.circle(self.screen, colour, self.choppedroot[i].get(),
                                        round((self.thickness - i * delta_thickness) * scale / 2))
-                    self.choppedroot[i] = (self.choppedroot[i][0] + 2 - random.random() * 4, self.choppedroot[i][1] + 2 - random.random() * 4)
+                    self.choppedroot[i].set(self.choppedroot[i].x + 2 - random.random() * 4, self.choppedroot[i].y + 2 - random.random() * 4)
 
                 for i in range(len(self.choppedsubroots)):
                     self.choppedsubroots[i].draw(colour, scale)
@@ -72,7 +88,7 @@ class Root:
         index = round(i * (len(self.coords) - 1) / G.root_counter_max)
 
         if index != G.root_counter_max and index != len(self.coords) - 1:
-            pygame.draw.circle(self.screen, G.root_colour, list(map(round, self.coords[index])),
+            pygame.draw.circle(self.screen, G.root_colour, self.coords[index].get(),
                            round((self.thickness - index * delta_thickness) / 2) + 1)
 
         for j in range(len(self.subroots)):
@@ -81,7 +97,7 @@ class Root:
     def extend(self):
         # TODO: take care of the branching out
         #   add to subroots, kill this root
-        prev_x, prev_y = self.coords[-1]
+        prev = self.coords[-1]
 
         # if self.x <= 0 or self.x >= 600 or self.y <= 0 or self.y >= 600:
         #     return
@@ -99,7 +115,7 @@ class Root:
 
                     # Angle
                     if i == 1:
-                        new_root = Root(prev_x, prev_y,
+                        new_root = Root(prev.x, prev.y,
                                         max(self.thickness * self.thickness_scale, 5),
                                         self.angle + random.randint(-10, 10),
                                         self.maxlength * 2,
@@ -112,7 +128,7 @@ class Root:
 
                     init_angle = random.randint(30, 50)
                     for j in range(i):
-                        new_root = Root(prev_x, prev_y,
+                        new_root = Root(prev.x, prev.y,
                                         max(self.thickness * self.thickness_scale, 5),
                                         self.angle + init_angle,
                                         self.maxlength * 2,
@@ -128,8 +144,8 @@ class Root:
             delta_y = math.sin(math.radians(self.angle)) * self.speed
 
             self.angle += 5 - random.random() * 10
-            self.coords.append((prev_x + delta_x, prev_y + delta_y))
-            print(prev_x, prev_y)
+            self.coords.append(RootCoord(prev.x + delta_x, prev.y + delta_y))
+            print(prev.x, prev.y)
 
         else:
             for i in range(len(self.subroots)):
@@ -140,11 +156,11 @@ class Root:
 
     def trim(self, x, y):
         for i in range(len(self.coords)):
-            if (x-self.coords[i][0]) ** 2 + (y-self.coords[i][1]) ** 2 < G.collision_thres:
+            if (x-self.coords[i].x) ** 2 + (y-self.coords[i].y) ** 2 < G.collision_thres:
                 print("CHOPPING")
-                self.choppedroot = self.coords[i:]
+                self.choppedroot.extend(self.coords[i:])
                 self.coords = self.coords[:i]
-                self.choppedsubroots = self.subroots
+                self.choppedsubroots.extend(self.subroots)
                 self.subroots = []
                 self.timesincechop = 1
                 break
@@ -200,7 +216,6 @@ class Player(pygame.sprite.DirtySprite):
                 target += 180
 
         delta_angle = (self.direction - target ) % 360
-        print(target, self.direction)
 
         # delta_angle)
         self.direction = target
@@ -220,7 +235,12 @@ class Player(pygame.sprite.DirtySprite):
         self.screen.blit(rotated,
                          (self.x-rotated.get_width()//2, self.y - rotated.get_height()//2)) # (self.x-self.image.get_width()//2, self.y-self.image.get_height()//2))
 
+    def get_mouth(self):
+        radius = self.image.get_width()//2
+        x = self.x + radius * math.cos(math.radians(self.direction))
+        y = self.y + radius * math.sin(math.radians(self.direction))
 
+        return x,y
 
 class Game:
     def __init__(self, screen):
@@ -247,14 +267,16 @@ def run(screen, params):
             if event.type == pygame.QUIT:
                 return 0, {}
 
-        if temp == 2000: # Used for testing TODO: Delete when done
-            x,y = input("Enter trim").split()
+        #if temp == 2000: # Used for testing TODO: Delete when done
+        #    x,y = input("Enter trim").split()
 
-            tree.trim(int(x), int(y))
-            tree2.trim(int(x), int(y))
-            tree3.trim(int(x), int(y))
+        px, py = rat.get_mouth()
+        tree.trim(px, py)
+        tree2.trim(px, py)
+        tree3.trim(px, py)
 
         screen.fill(G.bg_colour)
+        # pygame.draw.circle(screen, "red", (px,py), 10) # makes the rat looks like a clown
 
         img = pygame.image.load("./assets/tree-trunk.png")
         i2 = pygame.transform.scale(img, (75, 75))
@@ -265,12 +287,12 @@ def run(screen, params):
         tree2.draw(c)
         tree3.draw(c)
 
-        rat.turn(pygame.mouse.get_pos())
-        rat.move()
-
         tree.draw_blink(root_update_counter)
         tree2.draw_blink(root_update_counter)
         tree3.draw_blink(root_update_counter)
+
+        rat.turn(pygame.mouse.get_pos())
+        rat.move()
 
         screen.blit(i2, (700 - 37.5, 500 - 37.5))
 
