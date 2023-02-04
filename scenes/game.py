@@ -282,6 +282,9 @@ class Player(pygame.sprite.DirtySprite):
         self.direction = 0
         self.offset = 0
 
+        self.max_stamina = 500
+        self.stamina = 500
+
         self.image = pygame.image.load("./assets/rat3.png")
         self.rect = pygame.Rect(x - self.image.get_width() // 2, y - self.image.get_height() // 2,
                                 self.image.get_width(), self.image.get_height())
@@ -320,13 +323,17 @@ class Player(pygame.sprite.DirtySprite):
 
         mx, my = pygame.mouse.get_pos()
 
-        if not self.near_mouse():
+        if not self.near_mouse() and self.stamina > 0:
             self.trail.insert(0, (self.x, self.y))
             if len(self.trail) > self.traillength:
                 self.trail.pop()
 
             self.x += delta_x
             self.y += delta_y
+
+            self.stamina -= 2
+        else:
+            self.stamina = min(self.max_stamina, self.stamina + 1)
 
         self.draw()
 
@@ -409,6 +416,7 @@ def run(screen, params):
             if chopping_meter > required_power[hover_root_depth]:
                 chopping_meter = 0
                 wood_obtained = tree.trim(chopping_location[0], chopping_location[1])
+                rat.stamina -= (len(required_power) - hover_root_depth) * rat.max_stamina / 8
                 if wood_obtained > 0:
                     display_text.append(
                         Text(round(rat.x) - rat.image.get_width() / 4, round(rat.y) - rat.image.get_height(),
@@ -426,8 +434,18 @@ def run(screen, params):
                 screen.blit(img, (text.x - rat.image.get_width() / 4, text.y - rat.image.get_height() / 4))
                 text.draw("white", 30)
 
+        # wood counter
         wood = Text(25, 50, f"Wood: {total_wood}", 99, screen)
         wood.draw("black", 30)
+
+        # stamina text
+        stam = Text(25, 100, f"Stamina:", 99, screen)
+        stam.draw("black", 30)
+
+        # stamina bar
+        color = ["red", "yellow", "green"][max(0, round(rat.stamina * 3 / rat.max_stamina) - 1)]
+        pygame.draw.rect(screen, "black", pygame.Rect(24, 139, round((rat.max_stamina - 1) / 2) + 2, 32), 1)
+        pygame.draw.rect(screen, color, pygame.Rect(25, 140, round(max(0, rat.stamina - 1) / 2), 30))
 
         if hover_root_depth > 0:
             pygame.draw.circle(screen, power_colour[hover_root_depth], (mx, my), 10)  # makes the rat looks like a clown
