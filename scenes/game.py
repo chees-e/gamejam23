@@ -281,10 +281,14 @@ class Player(pygame.sprite.DirtySprite):
         self.screen = screen
         self.direction = 0
         self.offset = 0
-        self.energy = 100
 
-        self.max_stamina = 500
-        self.stamina = 500
+        # hunger
+        self.max_energy = 250.0
+        self.energy = 250.0
+
+        # for moving and chewing, once this hits 0 starts consuming energy instead
+        self.max_stamina = 500.0
+        self.stamina = 500.0
 
         self.image = pygame.image.load("./assets/rat3.png")
         self.rect = pygame.Rect(x - self.image.get_width() // 2, y - self.image.get_height() // 2,
@@ -332,9 +336,9 @@ class Player(pygame.sprite.DirtySprite):
             self.x += delta_x
             self.y += delta_y
 
-            self.stamina -= 2
+            self.stamina -= G.moving_stamina_cost
         else:
-            self.stamina = min(self.max_stamina, self.stamina + 1)
+            self.stamina = min(self.max_stamina, self.stamina + G.idle_stamina_regen)
 
         self.draw()
 
@@ -379,7 +383,7 @@ def run(screen, params):
 
     total_wood = 0
 
-    required_power = [1, 300, 120, 60, 20, 5, 1]  # for chopping trees
+    required_power = [1, 300, 150, 75, 38, 20, 1]  # for chopping trees
     power_colour = ["black", "red", "orange", "yellow", "green", "cyan", "black"]
 
     display_text = []
@@ -409,17 +413,20 @@ def run(screen, params):
                     chopping_meter = -1
 
             chopping_meter += 1
-            rat.energy -= G.extra_energy_lost
-            pygame.draw.line(screen, power_colour[hover_root_depth],
-                             (round(rat.x) - rat.image.get_width() // 2, round(rat.y) - rat.image.get_height()),
-                             (round(rat.x - rat.image.get_width() // 2 + rat.image.get_width() * (
-                                         chopping_meter / required_power[hover_root_depth])),
+            if rat.stamina <= 0:
+                chopping_meter = -1
+            else:
+                rat.stamina -= G.chopping_stamina_cost_base
+
+                pygame.draw.line(screen, power_colour[hover_root_depth],
+                             (round(rat.x) - rat.image.get_width() // 2,
+                              round(rat.y) - rat.image.get_height()),
+                             (round(rat.x - rat.image.get_width() // 2 + rat.image.get_width() * (chopping_meter / required_power[hover_root_depth])),
                               round(rat.y) - rat.image.get_height()), 10)
 
             if chopping_meter > required_power[hover_root_depth]:
                 chopping_meter = 0
                 wood_obtained = tree.trim(chopping_location[0], chopping_location[1])
-                rat.stamina -= 2 ** (len(required_power) - hover_root_depth + 2)
                 if wood_obtained > 0:
                     display_text.append(
                         Text(round(rat.x) - rat.image.get_width() / 4, round(rat.y) - rat.image.get_height(),
@@ -444,23 +451,20 @@ def run(screen, params):
         if wood_colour == "green":
             wood_colour = "black"
 
+
+        # energy
         energy = Text(25, 100, f"Energy: {round(rat.energy)}", 99, screen)
-        if chopping_meter > 0:
-            energy.draw("red", 32)
-        elif not rat.near_mouse():
-            energy.draw("orange", 30)
-        else:
-            energy.draw("black", 30)
-
-
-        # stamina text
-        stam = Text(25, 100, f"Stamina:", 99, screen)
-        stam.draw("black", 30)
+        color = ["red", "yellow", "green"][max(0, round(rat.energy * 3 / rat.max_energy) - 1)]
+        energy.draw(color, 30)
 
         # stamina bar
         color = ["red", "yellow", "green"][max(0, round(rat.stamina * 3 / rat.max_stamina) - 1)]
         pygame.draw.rect(screen, "black", pygame.Rect(24, 139, round((rat.max_stamina - 1) / 2) + 2, 32), 1)
         pygame.draw.rect(screen, color, pygame.Rect(25, 140, round(max(0, rat.stamina - 1) / 2), 30))
+
+        # stamina text
+        stam = Text(25, 145, f"Stamina:", 99, screen)
+        stam.draw("black", 30)
 
         if hover_root_depth > 0:
             pygame.draw.circle(screen, power_colour[hover_root_depth], (mx, my), 10)  # makes the rat looks like a clown
@@ -470,14 +474,15 @@ def run(screen, params):
             root_update_counter = 0
 
         rat.turn(pygame.mouse.get_pos())
+
+
         if tree.contains(px, py):
             rat.move(0.5)
         else:
             rat.move(2)
-        if not rat.near_mouse():
-            rat.energy -= G.energy_lost
-        else:
-            rat.energy -= G.energy_lost/2
+
+        rat.energy -= G.energy_lost
+
         pygame.display.flip()
         clock.tick(60)
         root_update_counter += 1
