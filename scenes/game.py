@@ -178,16 +178,17 @@ class Root:
                     got_wood = True
             return got_wood
         
-    # Returns True if x,y are within a root
+    # Returns the depth if x,y are within a root
     def contains(self, x, y):
         for i in range(len(self.coords)):
             if (x-self.coords[i].x) ** 2 + (y-self.coords[i].y) ** 2 < G.collision_thres:
-                return True
+                return self.depth
         else:
-            contains = False
+            contains = 0
             for i in range(len(self.subroots)):
-                if self.subroots[i].contains(x,y):
-                    contains = True
+                cur = self.subroots[i].contains(x,y)
+                if cur > 0:
+                    contains = cur
             return contains
 
 
@@ -238,10 +239,11 @@ class Tree(Sprite):
             self.roots[i].extend()
 
     def contains(self, x, y):
-        contains = False
+        contains = 0
         for i in range(len(self.roots)):
-            if self.roots[i].contains(x, y):
-                contains = True
+            cur = self.roots[i].contains(x, y)
+            if cur > 0:
+                contains = cur
         return contains
         
 
@@ -339,7 +341,10 @@ def run(screen, params):
 
     chopping_meter = 0
     chopping_location = (0,0)
-
+    chopping_depth = 0
+    
+    required_power = [0, 300, 120, 60, 20, 0, 0] # for chopping trees
+    power_colour = ["black", "red", "orange", "yellow", "green", "black", "black"]
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -352,18 +357,23 @@ def run(screen, params):
 
         tree.draw(root_update_counter)
 
-        if pygame.mouse.get_pressed(3)[0] and rat.near_mouse() and tree.contains(mx, my): #TODO: check if theres a root too
+        # the root depth if mouse is currently hovering over one
+        hover_root_depth = tree.contains(mx, my)
+
+        if pygame.mouse.get_pressed(3)[0] and rat.near_mouse() and hover_root_depth > 0:
             if chopping_meter == 0:
                 chopping_location = (mx, my)
+                chopping_depth = hover_root_depth
             else:
                 if (mx-chopping_location[0]) ** 2 + (my - chopping_location[1]) ** 2 > 4:
                     chopping_meter = -1
 
             chopping_meter += 1
-            pygame.draw.line(screen, "red", (round(rat.x) - rat.image.get_width()//2, round(rat.y)- rat.image.get_height()),
-                             (round(rat.x - rat.image.get_width()//2 + rat.image.get_width() * (chopping_meter/60)), round(rat.y)- rat.image.get_height()), 10) # TODO: fix the 60 here too
+            pygame.draw.line(screen, power_colour[hover_root_depth] , (round(rat.x) - rat.image.get_width()//2, round(rat.y)- rat.image.get_height()),
+                             (round(rat.x - rat.image.get_width()//2 + rat.image.get_width() * (chopping_meter/required_power[hover_root_depth])), 
+                              round(rat.y)- rat.image.get_height()), 10) 
 
-            if chopping_meter > 60: # TODO make this dependent on the depth of the root
+            if chopping_meter > required_power[hover_root_depth]:
                 chopping_meter = 0
                 woods_obtained = tree.trim(chopping_location[0], chopping_location[1])
                 if woods_obtained > 0:
@@ -372,7 +382,7 @@ def run(screen, params):
         else:
             chopping_meter = 0
 
-        if tree.contains(mx, my):
+        if hover_root_depth > 0:
             pygame.draw.circle(screen, "red", (mx, my), 10)  # makes the rat looks like a clown
 
         if root_update_counter >= G.root_counter_max:
