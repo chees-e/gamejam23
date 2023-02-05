@@ -71,9 +71,12 @@ def prev(screen, page):
 
 def next(screen, page):
     print(page)
-    page = page + 1
-    run(screen, {}, page)
-    return page
+    if page==7:
+        return
+    else:
+        page = page + 1
+        run(screen, {}, page)
+        return
 
 
 def back(screen):
