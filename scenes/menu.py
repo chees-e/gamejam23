@@ -1,7 +1,7 @@
 import pygame
 import pygame_menu
 
-from scenes import game, settings, credits_page
+from scenes import game, settings, credits_page, tutorial
 
 
 # RV:
@@ -13,7 +13,7 @@ def run(screen, params):
 
         # menu.add.image('./assets/onlyclowns_transparent.png', scale=(0.5, 0.5))
         menu.add.button('Play', start, screen, font_size=50)
-        menu.add.button('Tutorial', go_to_tutorial, screen)
+        menu.add.button('How To Play', go_to_tutorial, screen)
         menu.add.button('Settings', go_to_settings, screen)
         menu.add.button('Credits', go_to_credits, screen)
         menu.add.button('Quit', pygame_menu.events.EXIT)  # letsfuckinggoooo
@@ -50,6 +50,7 @@ def start(screen):
 
 def go_to_tutorial(screen):
     # tutorial page
+    tutorial.run(screen, {})
     pass
 
 

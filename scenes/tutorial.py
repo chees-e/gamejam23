@@ -11,7 +11,8 @@ def run(screen, params):
     while True:
         tutorial = pygame_menu.Menu('', 1500, 900, theme=mainmenu)
 
-        tutorial.add.label('Volume', volume, screen)
+        tutorial.add.button('PREVIOUS', prev, screen, page)
+        tutorial.add.button('NEXT', next, screen, page)
         tutorial.add.button('Back', back, screen)
 
         tutorial.mainloop(surface)
@@ -20,6 +21,8 @@ def run(screen, params):
 # init pygame
 pygame.init()
 surface = pygame.display.set_mode((1500, 900))
+page = 0
+# have a list of tutorial images, "page" is the list index to display
 
 mainmenu = pygame_menu.themes.THEME_DEFAULT.copy()
 mainmenu.background_color = (4,4,4) #set theme background color as the image
@@ -31,9 +34,15 @@ mainmenu.widget_font_color = (255, 255, 255)
 mainmenu.widget_selection_effect = pygame_menu.widgets.RightArrowSelection(arrow_size=(30, 40))
 
 # define buttons
-def volume(screen):
-    print("open volume settings")
-    return
+def prev(screen, page):
+    print(page)
+    page = page - 1
+    return page
+
+def next(screen, page):
+    print(page)
+    page = page + 1
+    return page
 
 
 def back(screen):
