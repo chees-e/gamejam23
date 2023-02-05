@@ -260,8 +260,7 @@ class Tree(Sprite):
 
     def draw(self, blink_counter):
         if not underground:
-            # TODO: fix this
-            # self.image = pygame.transform.scale(pygame.image.load("./assets/tree.png"), (150, 203))
+            self.image = pygame.image.load("./assets/tree.png")
             y = self.y - self.image.get_width() // 2 - 100
 
         else:
