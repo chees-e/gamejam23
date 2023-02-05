@@ -614,10 +614,6 @@ def run(screen, params):
         ratrect = Temp(px, py)
         mouserect = Temp(mx, my)
 
-        # Update tree
-        for obj in trees:
-            obj.draw(update_counter)
-
         if len(display_text) > 0:
             img = pygame.transform.scale(pygame.image.load("./assets/wood_1fab5.png"), (50, 50))
             screen.blit(img,
@@ -629,6 +625,10 @@ def run(screen, params):
 
         if underground:
             group_underground.draw(screen)
+
+            # Update tree
+            for obj in trees:
+                obj.draw(update_counter)
 
             # the root depth if mouse is currently hovering over one
             collided_root = pygame.sprite.spritecollideany(mouserect, group_root)
@@ -693,6 +693,9 @@ def run(screen, params):
                     rat.move(2)
         else:
             group_aboveground.draw(screen)
+            # Update tree
+            for obj in trees:
+                obj.draw(update_counter)
 
             rat.turn(pygame.mouse.get_pos())
 
@@ -705,6 +708,12 @@ def run(screen, params):
                 rat.move(2)
 
         rat.energy -= G.energy_lost
+
+
+        if update_counter >= G.root_counter_max:
+            for i in trees:
+                i.extend()
+            update_counter = 0
 
 
         ## Status displays
@@ -730,11 +739,6 @@ def run(screen, params):
         for text in display_text:
             if text.timeleft <= 0:
                 display_text.remove(text)
-
-        if update_counter >= G.root_counter_max:
-            for i in trees:
-                i.extend()
-            update_counter = 0
 
         update_counter += 1
         pygame.display.flip()
