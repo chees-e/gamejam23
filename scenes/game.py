@@ -413,8 +413,8 @@ class Rock(Sprite):
 class Bush(Sprite):
     def __init__(self, x, y, screen):
         Sprite.__init__(self)
-        self.size = random.randint(50, 100)
-        self.image = pygame.transform.scale(pygame.image.load("./assets/rock-underground.png"), (self.size, self.size))
+        self.size = random.randint(25, 50)
+        self.image = pygame.transform.scale(pygame.image.load("./assets/bush.png"), (self.size, self.size))
         self.x = x
         self.y = y
         self.rect = pygame.Rect(self.x - self.image.get_width() // 2, self.y - self.image.get_width() // 2,
@@ -430,14 +430,6 @@ class Bush(Sprite):
         ]
 
         self.screen = screen
-
-    def update_image(self, under):
-        if self.under != under:
-            if under:
-                self.image = pygame.transform.scale(pygame.image.load("./assets/rock-underground.png"),
-                                                    (self.size, self.size))
-            else:
-                self.image = pygame.transform.scale(pygame.image.load("./assets/rock1.png"), (self.size, self.size))
 
     def update(self):
         self.rect.x = self.x - self.image.get_width() // 2 - screen_offset
@@ -676,8 +668,8 @@ def run(screen, params):
     global underground, screen_offset
     clock = pygame.time.Clock()
 
-    # 0, nests, Rocks_u, rocks_a, exits, trees
-    num_items = [0, 3, 10, 10, 4, 6, 0]
+    # 0, nests, Rocks_u, rocks_a, bushes,  exits, trees
+    num_items = [0, 3, 10, 10, 28, 4, 8, 0]
     num_mats = 5
     item_r = [sum(num_items[:i + 1]) for i in range(len(num_items))]  # item range
     print(item_r)
@@ -696,12 +688,15 @@ def run(screen, params):
     # aboveground rocks
     a_rocks = [Rock(i[0], i[1], screen) for i in points[item_r[2]:item_r[3]]]
 
+    # bushes
+    bushes = [Bush(i[0], i[1], screen) for i in points[item_r[3]:item_r[4]]]
+
     # generate exits
-    exits = [Exit(i[0], i[1], screen) for i in points[item_r[3]:item_r[4]]]
+    exits = [Exit(i[0], i[1], screen) for i in points[item_r[4]:item_r[5]]]
 
     # generate trees last
     trees = [Tree(i[0], i[1], random.choice(num_roots), random.choice(G.root_colours), screen) for i in
-             points[item_r[4]:item_r[5]]]
+             points[item_r[5]:item_r[6]]]
 
     for i in range(num_mats):
         group_a_mats.add(Material(random.randint(G.tiles_width, 2*(G.width-G.tiles_width)),
@@ -711,7 +706,7 @@ def run(screen, params):
 
     # TODO try using groups
     underground_objects = u_rocks + exits + nests
-    aboveground_objects = a_rocks + exits  # + trees
+    aboveground_objects = a_rocks + bushes + exits  # + trees
     group_underground.add(underground_objects)
     group_aboveground.add(aboveground_objects)
 
@@ -767,15 +762,26 @@ def run(screen, params):
     for j in range(15):
         a_bg.blit(rivertile2, (49 * 60, j * 60, 60, 60))
 
+    playing = False
+
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return 0, {}
+        if underground and not playing:
+            pygame.mixer.music.load('./assets/music/underground-loop.wav')
+            pygame.mixer.music.play(-1)
+            playing = True
+        elif not underground and not playing:
+            pygame.mixer.music.load('./assets/music/aboveground-loop.wav')
+            pygame.mixer.music.play(-1)
+            playing = True
 
         # Checking for switiching sides
         if pygame.mouse.get_pressed(3)[0]:
             if rat.near_mouse() and near_exit(exits, rat):
                 underground = not underground
+                playing = False
                 for rock in a_rocks:
                     rock.update_image(underground)
                 time.sleep(0.25)
@@ -971,27 +977,25 @@ def run(screen, params):
                 if event.type == pygame.KEYDOWN:
                     # spd
                     if event.key == pygame.K_1 and total_wood >= 2 ** rat.upgrade_level[1][0]:
-                        rat.upgrade_level[1][0] = min(5, rat.upgrade_level[1][0] + 1)
                         total_wood -= 2 ** rat.upgrade_level[1][0]
+                        rat.upgrade_level[1][0] = min(5, rat.upgrade_level[1][0] + 1)
                     # moving cost
                     elif event.key == pygame.K_2 and total_wood >= 2 ** rat.upgrade_level[2][0]:
-                        rat.upgrade_level[2][0] = min(5, rat.upgrade_level[2][0] + 1)
                         total_wood -= 2 ** rat.upgrade_level[2][0]
+                        rat.upgrade_level[2][0] = min(5, rat.upgrade_level[2][0] + 1)
                     # max stamina
                     elif event.key == pygame.K_3 and total_wood >= 2 ** rat.upgrade_level[3][0]:
-                        rat.upgrade_level[3][0] = min(5, rat.upgrade_level[3][0] + 1)
                         total_wood -= 2 ** rat.upgrade_level[3][0]
+                        rat.upgrade_level[3][0] = min(5, rat.upgrade_level[3][0] + 1)
                     # stamina regen
                     elif event.key == pygame.K_4 and total_wood >= 2 ** rat.upgrade_level[4][0]:
-                        rat.upgrade_level[4][0] = min(5, rat.upgrade_level[4][0] + 1)
                         total_wood -= 2 ** rat.upgrade_level[4][0]
+                        rat.upgrade_level[4][0] = min(5, rat.upgrade_level[4][0] + 1)
                     # energy cost
                     elif event.key == pygame.K_5 and total_wood >= 2 ** rat.upgrade_level[5][0]:
-                        rat.upgrade_level[5][0] = min(5, rat.upgrade_level[5][0] + 1)
                         total_wood -= 2 ** rat.upgrade_level[5][0]
+                        rat.upgrade_level[5][0] = min(5, rat.upgrade_level[5][0] + 1)
 
-            if total_wood < 0:
-                total_wood = 0
 
             box = pygame.Surface((300, 400))
             box.fill(G.box_colour)
@@ -1010,7 +1014,6 @@ def run(screen, params):
                 screen.blit(trunk, (left + 200, top + i * 76))
 
             for i in range(len(locations)):
-                print(i)
                 index = locations[i]
                 t = Text(index[0] + 75 / 8, index[1] + 75 / 4, f"{upgrade_text_names[i]}", 999, screen)
                 t.draw("white", 35)
