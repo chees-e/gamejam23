@@ -28,7 +28,7 @@ extend_chance = 0.8
 wood_double_chance = 0.1
 wood_lost_chance = 0.3
 
-energy_lost = 0.05
+energy_lost = 0.02
 energy_recharge_regen = 1
 
 chopping_stamina_cost_base = 1

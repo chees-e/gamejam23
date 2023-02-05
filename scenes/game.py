@@ -536,7 +536,7 @@ class Player(pygame.sprite.DirtySprite):
             [0, -0.05],  # move cost
             [0, 50],  # max stam
             [0, 0.05],  # stam regen
-            [0, 0.0125]  # energy cost
+            [0, 0.004]  # energy cost
         ]
 
         self.spd = 2 + self.upgrade_level[1][0] * self.upgrade_level[1][-1]
