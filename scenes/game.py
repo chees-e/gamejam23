@@ -335,9 +335,6 @@ class Tree(Sprite):
         self.rect = pygame.Rect(self.x - self.image.get_width() // 2 - screen_offset,
                                 self.y - self.image.get_height() // 2, self.image.get_width(), self.image.get_height())
 
-        pygame.draw.circle(self.screen, "red", self.rect.center, 10)
-        pygame.draw.circle(self.screen, "yellow", (self.rect.x, self.rect.y), 10)
-
     def drawroots(self, blink_counter):
         if underground:
             for i in range(len(self.roots)):
@@ -403,7 +400,6 @@ class Rock(Sprite):
 
     def update(self):
         self.rect.x = self.x - self.image.get_width() // 2 - screen_offset
-        pygame.draw.circle(self.screen, "red", self.rect.center, 10)
 
     # def draw(self, counter):
     #     if not underground: # make this a function to switch
@@ -433,7 +429,6 @@ class Bush(Sprite):
 
     def update(self):
         self.rect.x = self.x - self.image.get_width() // 2 - screen_offset
-        pygame.draw.circle(self.screen, "red", self.rect.center, 10)
 
 
 class Exit(Sprite):
@@ -669,7 +664,7 @@ def run(screen, params):
     clock = pygame.time.Clock()
 
     # 0, nests, Rocks_u, rocks_a, bushes,  exits, trees
-    num_items = [0, 3, 10, 10, 28, 4, 8, 0]
+    num_items = [0, 3, 18, 8, 20, 4, 10, 0]
     num_mats = 5
     item_r = [sum(num_items[:i + 1]) for i in range(len(num_items))]  # item range
     print(item_r)
@@ -945,13 +940,17 @@ def run(screen, params):
 
         ## Status displays
         # wood counter
-        wood = Text(35, 50, f"Wood: {total_wood}", 99, screen)
+        img = pygame.transform.scale(pygame.image.load("./assets/wood_1fab5.png"), (50, 50))
+        screen.blit(img, (100, 35, 50, 50))
+        wood = Text(35, 50, f"Wood:   {total_wood}", 99, screen)
         wood.draw(wood_colour, 30)
 
         # energy
-        energy = Text(35, 100, f"Energy: {round(rat.energy)}", 99, screen)
+        e_img = pygame.transform.scale(pygame.image.load("./assets/energy.png"), (20, 30))
+        energy = Text(35, 100, f"Energy    : {round(rat.energy)}", 99, screen)
         color = ["red", "yellow", "green"][max(0, round(rat.energy * 3 / rat.max_energy) - 1)]
         energy.draw(color, 30)
+        screen.blit(e_img, (105, 95, 20, 30))
 
         # stamina bar
         color = ["red", "yellow", "green"][max(0, round(rat.stamina * 3 / rat.max_stamina) - 1)]
