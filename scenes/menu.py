@@ -13,7 +13,7 @@ def run(screen, params):
         menu = pygame_menu.Menu('', 1500, 900, theme=mainmenu)
 
         # menu.add.image('./assets/onlyclowns_transparent.png', scale=(0.5, 0.5))
-        menu.add.button('Play', start, screen)
+        menu.add.button('Play', start, screen, font_size=50)
         menu.add.button('Tutorial', go_to_tutorial, screen)
         menu.add.button('Settings', go_to_settings, screen)
         menu.add.button('Credits', go_to_credits, screen)
