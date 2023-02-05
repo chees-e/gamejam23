@@ -133,11 +133,16 @@ class Root:
             #print("Branching out")
             self.alive = False
 
-            pdt = [0.02, 0.1, 0.8, 1]
-
+            pdt = {
+                1: [0.02, 0.1, 0.8, 1],
+                2: [0.05, 0.15, 0.8, 1],
+                3: [0.1, 0.3, 0.9, 1],
+                4: [0.4, 0.6, 0.95, 1],
+                5: [0.5, 0.7, 0.99, 1],
+            }
             new_branches = random.random()
-            for i in range(len(pdt)):
-                if new_branches <= pdt[i]:
+            for i in range(len(pdt[1])):
+                if new_branches <= pdt[self.depth][i]:
                     #print("NEW", new_branches, i)
 
                     # Angle
@@ -146,7 +151,7 @@ class Root:
                                         max(self.thickness * self.thickness_scale, 5),
                                         self.angle + random.randint(-10, 10),
                                         self.maxlength * 2,
-                                        max(self.speed * 0.7, 1),
+                                        max(self.speed*0.8, 1),
                                         self.depth + 1,
                                         self.colour,
                                         self.screen)
@@ -160,7 +165,7 @@ class Root:
                                         max(self.thickness * self.thickness_scale, 5),
                                         self.angle + init_angle,
                                         self.maxlength * 2,
-                                        max(self.speed * 0.7, 1),
+                                        max(self.speed*0.8, 1),
                                         self.depth + 1,
                                         self.colour,
                                         self.screen)
@@ -168,7 +173,9 @@ class Root:
                         self.subroots.append(new_root)
                     break
 
-        if self.alive:
+        random_factor = 2/(self.depth)
+
+        if self.alive and random.random() < random_factor:
             delta_x = math.cos(math.radians(self.angle)) * self.speed
             delta_y = math.sin(math.radians(self.angle)) * self.speed
 
@@ -253,16 +260,18 @@ class Tree(Sprite):
 
     def draw(self, blink_counter):
         if not underground:
-            self.image = pygame.transform.scale(pygame.image.load("./assets/tree.png"), (150, 203))
+            # TODO: fix this
+            # self.image = pygame.transform.scale(pygame.image.load("./assets/tree.png"), (150, 203))
             y = self.y - self.image.get_width() // 2 - 100
+
         else:
             self.image = pygame.transform.scale(pygame.image.load("./assets/tree-trunk.png"), (self.size, self.size))
             y = self.y - self.image.get_height() // 2
-        for i in range(len(self.roots)):
-            self.roots[i].draw()
+            for i in range(len(self.roots)):
+                self.roots[i].draw()
 
-        for i in range(len(self.roots)):
-            self.roots[i].draw_blink(blink_counter)
+            for i in range(len(self.roots)):
+                self.roots[i].draw_blink(blink_counter)
 
         self.screen.blit(self.image, (self.x - self.image.get_width() // 2, y))
 
@@ -312,7 +321,7 @@ class Rock(Sprite):
         self.screen = screen
 
     def draw(self, counter):
-        if not underground:
+        if not underground: # make this a function to switch
             self.image = pygame.transform.scale(pygame.image.load("./assets/rock1.png"), (self.size, self.size))
         self.screen.blit(self.image, (self.x, self.y))
 
@@ -356,8 +365,6 @@ class Nest(Sprite):
         print(self.triggers)
 
     def draw(self, counter):
-        if not underground:
-            return
         self.screen.blit(self.image, (self.x, self.y))
 
 class Player(pygame.sprite.DirtySprite):
@@ -376,14 +383,14 @@ class Player(pygame.sprite.DirtySprite):
 
         # for moving and chewing, once this hits 0 starts consuming energy instead
         self.max_stamina = 500.0
-        self.stamina = 500.0
+        self.stamina = 0.0
 
         self.image = pygame.image.load("./assets/rat3.png")
         self.rect = pygame.Rect(x - self.image.get_width() // 2, y - self.image.get_height() // 2,
                                 self.image.get_width(), self.image.get_height())
 
         self.trail = []
-        self.traillength = 50
+        self.traillength = 25
 
     def turn(self, mouse):
         mx, my = mouse
@@ -563,6 +570,7 @@ def run(screen, params):
         mx, my = pygame.mouse.get_pos()
 
 
+        print(underground)
         if underground:
             for obj in underground_objects:
                 obj.draw(update_counter)
@@ -649,11 +657,6 @@ def run(screen, params):
             if hover_root_depth > 0:
                 pygame.draw.circle(screen, power_colour[hover_root_depth], (mx, my), 10)  # makes the rat looks like a clown
 
-            if update_counter >= G.root_counter_max:
-                for i in trees:
-                    i.extend()
-                update_counter = 0
-
             rat.turn(pygame.mouse.get_pos())
 
             for i in underground_objects:
@@ -664,19 +667,15 @@ def run(screen, params):
             else:
                 for i in trees:
                     if i.contains(px, py):
-                        rat.move(0.025)
-                    else:
-                        rat.move(1)
+                        rat.move(rat.stamina/rat.max_stamina+0.2)
+                        break
+                else:
+                    rat.move(2)
 
             rat.energy -= G.energy_lost
         else:
             for obj in aboveground_objects:
                 obj.draw(update_counter)
-
-            if update_counter >= G.root_counter_max:
-                for i in trees:
-                    i.extend()
-                update_counter = 0
 
             for text in display_text:
                 if text.timeleft <= 0:
@@ -714,15 +713,19 @@ def run(screen, params):
                     rat.stamina = min(rat.max_stamina, rat.stamina + G.idle_stamina_regen)
                     break
             else:
-                for i in trees:
-                    if i.contains(px, py):
-                        rat.move(0.025)
-                    else:
-                        rat.move(1)
+                rat.move(2)
 
             rat.turn(pygame.mouse.get_pos())
             rat.energy -= G.energy_lost
 
+        if update_counter >= G.root_counter_max:
+            for i in trees:
+                i.extend()
+            update_counter = 0
+
         update_counter += 1
         pygame.display.flip()
         clock.tick(60)
+
+
+        #TODO: check tail and slowing down, rock collision
