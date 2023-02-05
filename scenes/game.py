@@ -492,11 +492,21 @@ def in_proximity(c, acc):
         return False
 
 def get_map_items(num_items):
+    if num_items > G.max_tiles:
+        print("Too many times")
+        return []
+
     acc = []
-    for _ in range(num_items):
-        random_values = [(random.randint(300, 1200), random.randint(100, 800)) for i in range(10000)]
-        v = [i for i in random_values if not in_proximity(i, acc)]
-        acc.append(random.choice(v))
+    tiles = random.sample([(i,j) for i in range(1,G.tiles_x-1) for j in range(1,G.tiles_y-1)], num_items)
+    print(tiles)
+    for (tilex, tiley) in tiles:
+        minx = tilex * G.tiles_width + G.tile_offset
+        maxx = (tilex + 1) * G.tiles_width - G.tile_offset
+        miny = tiley * G.tiles_height + G.tile_offset
+        maxy = (tiley + 1) * G.tiles_height - G.tile_offset
+
+        acc.append((random.randint(minx, maxx), random.randint(miny, maxy)))
+
     return acc
 
 # Entry point
@@ -681,7 +691,7 @@ def run(screen, params):
 
             rat.turn(pygame.mouse.get_pos())
 
-            for i in underground_objects:
+            for i in underground_objects + trees:
                 b = i.boundaries
                 if b[0] <= px <= b[2] and b[1] <= py <= b[3]:
                     rat.stamina = min(rat.max_stamina, rat.stamina + G.idle_stamina_regen)
