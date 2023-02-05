@@ -18,11 +18,12 @@ class Game:
         print("Game started")
 
     def run(self):
-        params = {}
-        next_scene = 0
-        while True:
-            print("SCENE", next_scene)
-            next_scene, params = self.scenes[next_scene].run(self.screen, params)
+        menu.run(self.screen, {})
+        # params = {}
+        # next_scene = 0
+        # while True:
+        #     print("SCENE", next_scene)
+        #     next_scene, params = self.scenes[next_scene].run(self.screen, params)
 
 
 def main():
