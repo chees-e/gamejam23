@@ -31,7 +31,15 @@ def run(screen, params, page):
 # init pygame
 pygame.init()
 surface = pygame.display.set_mode((1500, 900))
-tutorialimages=['./assets/dirt1.png', './assets/dirt2.png', './assets/dirt3.png']
+tutorialimages=['./assets/dirt1.png',
+                './assets/dirt1.png',
+                './assets/dirt2.png',
+                './assets/dirt3.png',
+                './assets/wood_1fab5.png',
+                './assets/wood_1fab5.png',
+                './assets/grass1.png',
+                './assets/apple.png',
+                './assets/river1.png']
 tutoriallabel=['', '1. MOVEMENT', '2. CHEW THROUGH ROOTS', '3. DEFEND YOUR NEST', '4. COLLECT WOOD', '5. UPGRADE STATS', '6. TOUCH GRASS', '7. FIND FOOD', '8. CROSS THE RIVER' ]
 tutoriallabel2=['', 'Your rodent will follow your mouse cursor. Keep an eye on your Stamina bar!',
                 'Click and hold to begin chewing through the root. Thicker roots take longer to chew through. ',
