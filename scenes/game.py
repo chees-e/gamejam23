@@ -859,7 +859,7 @@ def run(screen, params):
                 if chopping_meter > required_power[hover_root_depth]:
                     chopping_meter = 0
                     for i in trees:
-                        wood_obtained = i.trim(chopping_location[0] + screen_offset, chopping_location[1])
+                        wood_obtained = i.trim(collided_root.x, collided_root.y)
                         if wood_obtained > 0:
                             display_text.append(
                                 Text(round(rat.x - screen_offset) - rat.image.get_width() / 4,
