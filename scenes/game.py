@@ -7,9 +7,6 @@ import random
 import math
 import util.const as G
 
-
-
-
 # Groups (global var for now)
 group_root = pygame.sprite.Group()
 group_underground = pygame.sprite.Group()
@@ -29,8 +26,10 @@ def get_theta(x1, y1, x2, y2):  # Starts east, clockwise rotation
             target += 180
     return target
 
+
 # above/under
 underground = True
+
 
 # TODO, make a new group
 class Text:
@@ -52,8 +51,8 @@ class RootCoord(Sprite):
         Sprite.__init__(self)
         self.x = x
         self.y = y
-        minthickness = G.root_thickness//(2**depth)
-        self.rect = pygame.Rect(self.x-minthickness//2, self.y-minthickness//2, minthickness, minthickness)
+        minthickness = G.root_thickness // (2 ** depth)
+        self.rect = pygame.Rect(self.x - minthickness // 2, self.y - minthickness // 2, minthickness, minthickness)
         self.depth = depth
         group_root.add(self)
 
@@ -155,7 +154,7 @@ class Root:
         prev = self.coords[-1]
 
         if len(self.coords) >= self.length and self.alive and self.depth <= self.maxdepth:
-            #print("Branching out")
+            # print("Branching out")
             self.alive = False
 
             pdt = {
@@ -168,7 +167,7 @@ class Root:
             new_branches = random.random()
             for i in range(len(pdt[1])):
                 if new_branches <= pdt[self.depth][i]:
-                    #print("NEW", new_branches, i)
+                    # print("NEW", new_branches, i)
 
                     # Angle
                     if i == 1:
@@ -176,7 +175,7 @@ class Root:
                                         max(self.thickness * self.thickness_scale, 5),
                                         self.angle + random.randint(-10, 10),
                                         self.maxlength * 2,
-                                        max(self.speed*0.8, 1),
+                                        max(self.speed * 0.8, 1),
                                         self.depth + 1,
                                         self.colour,
                                         self.screen)
@@ -190,7 +189,7 @@ class Root:
                                         max(self.thickness * self.thickness_scale, 5),
                                         self.angle + init_angle,
                                         self.maxlength * 2,
-                                        max(self.speed*0.8, 1),
+                                        max(self.speed * 0.8, 1),
                                         self.depth + 1,
                                         self.colour,
                                         self.screen)
@@ -198,7 +197,7 @@ class Root:
                         self.subroots.append(new_root)
                     break
 
-        random_factor = 2/(self.depth)
+        random_factor = 2 / (self.depth)
 
         if self.alive and random.random() < random_factor:
             delta_x = math.cos(math.radians(self.angle)) * self.speed
@@ -216,7 +215,7 @@ class Root:
                 if delta_angle == 0:
                     self.angle += 10
                 else:
-                    self.angle += 90/delta_angle
+                    self.angle += 90 / delta_angle
                 self.coords.pop()
             else:
                 self.angle += 5 - random.random() * 10
@@ -278,7 +277,8 @@ class Tree(Sprite):
         angle_error = 180 // num
         root_list = []
         for i in range(num):
-            newroot = Root(self.x, self.y, G.root_thickness, init_angle, G.root_maxlength, G.root_speed, 1, self.colour, self.screen)
+            newroot = Root(self.x, self.y, G.root_thickness, init_angle, G.root_maxlength, G.root_speed, 1, self.colour,
+                           self.screen)
             init_angle = (init_angle + random.randint(delta_angle - angle_error, delta_angle + angle_error)) % 360
             root_list.append(newroot)
         return root_list
@@ -373,6 +373,7 @@ class Exit(Sprite):
     # def draw(self, counter):
     #     self.screen.blit(self.image, (self.x, self.y))
 
+
 class Nest(Sprite):
     def __init__(self, x, y, screen):
         Sprite.__init__(self)
@@ -400,7 +401,7 @@ class Nest(Sprite):
 class Temp(Sprite):
     def __init__(self, x, y):
         Sprite.__init__(self)
-        self.rect = pygame.Rect(x-2,y-2,4,4)
+        self.rect = pygame.Rect(x - 2, y - 2, 4, 4)
 
 
 class Player(pygame.sprite.DirtySprite):
@@ -427,7 +428,6 @@ class Player(pygame.sprite.DirtySprite):
 
         self.trail = []
         self.traillength = 25
-
 
     def turn(self, mouse):
         mx, my = mouse
@@ -489,9 +489,11 @@ def near_exit(exits, rat):
         if b[0] <= rat.x <= b[2] and b[1] <= rat.y <= b[3]:
             return True
 
+
 def near_nest(nest, rat):
     b = nest.triggers
     return b[0] <= rat.x <= b[2] and b[1] <= rat.y <= b[3]
+
 
 def in_proximity(c, acc):
     if acc:
@@ -502,13 +504,14 @@ def in_proximity(c, acc):
     else:
         return False
 
+
 def get_map_items(num_items):
     if num_items > G.max_tiles:
         print("Too many times")
         return []
 
     acc = []
-    tiles = random.sample([(i,j) for i in range(1,G.tiles_x-1) for j in range(1,G.tiles_y-1)], num_items)
+    tiles = random.sample([(i, j) for i in range(1, G.tiles_x - 1) for j in range(1, G.tiles_y - 1)], num_items)
     print(tiles)
     for (tilex, tiley) in tiles:
         minx = tilex * G.tiles_width + G.tile_offset
@@ -519,6 +522,7 @@ def get_map_items(num_items):
         acc.append((random.randint(minx, maxx), random.randint(miny, maxy)))
 
     return acc
+
 
 # Entry point
 def run(screen, params):
@@ -538,7 +542,7 @@ def run(screen, params):
     u_rocks = [Rock(i[0], i[1], screen) for i in points[:num_rocks]]
 
     # aboveground rocks
-    a_rocks = [Rock(i[0], i[1], screen) for i in points[num_rocks:num_rocks*2 - 1]]
+    a_rocks = [Rock(i[0], i[1], screen) for i in points[num_rocks:num_rocks * 2 - 1]]
 
     # generate exits
     exits = [Exit(i[0], i[1], screen) for i in points[num_rocks * 2 - 1:num_rocks * 2 - 1 + num_exits]]
@@ -548,14 +552,15 @@ def run(screen, params):
     nest = Nest(nest_location[0], nest_location[1], screen)
 
     # generate trees last
-    trees = [Tree(i[0], i[1], random.choice(num_roots), random.choice(G.root_colours), screen) for i in points[num_rocks * 2 + num_exits:]]
+    trees = [Tree(i[0], i[1], random.choice(num_roots), random.choice(G.root_colours), screen) for i in
+             points[num_rocks * 2 + num_exits:]]
 
     # TODO try using groups
     underground_objects = u_rocks + exits + [nest]
-    aboveground_objects = a_rocks + exits # + trees
+    aboveground_objects = a_rocks + exits  # + trees
     group_underground.add(underground_objects)
     group_aboveground.add(aboveground_objects)
-    #[print(i.x, i.y) for i in underground_objects]
+    # [print(i.x, i.y) for i in underground_objects]
 
     rat = Player(nest.x + 75, nest.y + 75, screen)
 
@@ -576,9 +581,9 @@ def run(screen, params):
     a_bg = pygame.Surface(G.size)
 
     tiles = [pygame.image.load("./assets/dirt1.png"),
-                 pygame.image.load("./assets/dirt2.png"),
-                 pygame.image.load("./assets/dirt3.png"),
-                 pygame.image.load("./assets/dirt-simple.png")]
+             pygame.image.load("./assets/dirt2.png"),
+             pygame.image.load("./assets/dirt3.png"),
+             pygame.image.load("./assets/dirt-simple.png")]
 
     for i in range(25):
         for j in range(15):
@@ -666,7 +671,7 @@ def run(screen, params):
                                      (round(rat.x) - rat.image.get_width() // 2,
                                       round(rat.y) - rat.image.get_height()),
                                      (round(rat.x - rat.image.get_width() // 2 + rat.image.get_width() * (
-                                                 chopping_meter / required_power[hover_root_depth])),
+                                             chopping_meter / required_power[hover_root_depth])),
                                       round(rat.y) - rat.image.get_height()), 10)
 
                 if chopping_meter > required_power[hover_root_depth]:
@@ -689,7 +694,7 @@ def run(screen, params):
             if hover_root_depth > 0:
                 pygame.draw.circle(screen, power_colour[hover_root_depth], (collided_root.x, collided_root.y), 10)
 
-            rat.turn(pygame.mouse.get_pos()) # I still want this to be before move
+            rat.turn(pygame.mouse.get_pos())  # I still want this to be before move
 
             for i in underground_objects + trees:
                 b = i.boundaries
@@ -698,7 +703,7 @@ def run(screen, params):
                     break
             else:
                 if pygame.sprite.spritecollideany(ratrect, group_root) is not None:
-                    rat.move(rat.stamina/rat.max_stamina+0.2)
+                    rat.move(rat.stamina / rat.max_stamina + 0.2)
                 else:
                     rat.move(2)
         else:
@@ -719,12 +724,10 @@ def run(screen, params):
 
         rat.energy -= G.energy_lost
 
-
         if update_counter >= G.root_counter_max:
             for i in trees:
                 i.extend()
             update_counter = 0
-
 
         ## Status displays
         # wood counter
