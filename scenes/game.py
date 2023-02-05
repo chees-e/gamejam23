@@ -408,6 +408,39 @@ class Rock(Sprite):
     #         self.image = pygame.transform.scale(pygame.image.load("./assets/rock1.png"), (self.size, self.size))
     #     self.screen.blit(self.image, (self.x, self.y))
 
+class Bush(Sprite):
+    def __init__(self, x, y, screen):
+        Sprite.__init__(self)
+        self.size = random.randint(50, 100)
+        self.image = pygame.transform.scale(pygame.image.load("./assets/rock-underground.png"), (self.size, self.size))
+        self.x = x
+        self.y = y
+        self.rect = pygame.Rect(self.x - self.image.get_width() // 2, self.y - self.image.get_width() // 2,
+                                self.image.get_width(), self.image.get_height())
+        self.radius = self.size / G.hitbox_scale
+        self.under = True
+
+        self.boundaries = [
+            self.x + self.size / G.hitbox_scale,
+            self.y + self.size / G.hitbox_scale,
+            self.x + self.size * 3 / G.hitbox_scale,
+            self.y + self.size * 3 / G.hitbox_scale
+        ]
+
+        self.screen = screen
+
+    def update_image(self, under):
+        if self.under != under:
+            if under:
+                self.image = pygame.transform.scale(pygame.image.load("./assets/rock-underground.png"),
+                                                    (self.size, self.size))
+            else:
+                self.image = pygame.transform.scale(pygame.image.load("./assets/rock1.png"), (self.size, self.size))
+
+    def update(self):
+        self.rect.x = self.x - self.image.get_width() // 2 - screen_offset
+        pygame.draw.circle(self.screen, "red", self.rect.center, 10)
+
 
 class Exit(Sprite):
     def __init__(self, x, y, screen):
