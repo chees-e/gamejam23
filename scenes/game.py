@@ -411,8 +411,8 @@ class Rock(Sprite):
 class Bush(Sprite):
     def __init__(self, x, y, screen):
         Sprite.__init__(self)
-        self.size = random.randint(50, 100)
-        self.image = pygame.transform.scale(pygame.image.load("./assets/rock-underground.png"), (self.size, self.size))
+        self.size = random.randint(25, 50)
+        self.image = pygame.transform.scale(pygame.image.load("./assets/bush.png"), (self.size, self.size))
         self.x = x
         self.y = y
         self.rect = pygame.Rect(self.x - self.image.get_width() // 2, self.y - self.image.get_width() // 2,
@@ -428,14 +428,6 @@ class Bush(Sprite):
         ]
 
         self.screen = screen
-
-    def update_image(self, under):
-        if self.under != under:
-            if under:
-                self.image = pygame.transform.scale(pygame.image.load("./assets/rock-underground.png"),
-                                                    (self.size, self.size))
-            else:
-                self.image = pygame.transform.scale(pygame.image.load("./assets/rock1.png"), (self.size, self.size))
 
     def update(self):
         self.rect.x = self.x - self.image.get_width() // 2 - screen_offset
@@ -674,8 +666,8 @@ def run(screen, params):
     global underground, screen_offset
     clock = pygame.time.Clock()
 
-    # 0, nests, Rocks_u, rocks_a, exits, trees
-    num_items = [0, 3, 10, 10, 4, 6, 0]
+    # 0, nests, Rocks_u, rocks_a, bushes,  exits, trees
+    num_items = [0, 3, 10, 10, 28, 4, 8, 0]
     num_mats = 5
     item_r = [sum(num_items[:i + 1]) for i in range(len(num_items))]  # item range
     print(item_r)
@@ -694,12 +686,15 @@ def run(screen, params):
     # aboveground rocks
     a_rocks = [Rock(i[0], i[1], screen) for i in points[item_r[2]:item_r[3]]]
 
+    # bushes
+    bushes = [Bush(i[0], i[1], screen) for i in points[item_r[3]:item_r[4]]]
+
     # generate exits
-    exits = [Exit(i[0], i[1], screen) for i in points[item_r[3]:item_r[4]]]
+    exits = [Exit(i[0], i[1], screen) for i in points[item_r[4]:item_r[5]]]
 
     # generate trees last
     trees = [Tree(i[0], i[1], random.choice(num_roots), random.choice(G.root_colours), screen) for i in
-             points[item_r[4]:item_r[5]]]
+             points[item_r[5]:item_r[6]]]
 
     for i in range(num_mats):
         group_a_mats.add(Material(random.randint(G.tiles_width, 2*(G.width-G.tiles_width)),
@@ -709,7 +704,7 @@ def run(screen, params):
 
     # TODO try using groups
     underground_objects = u_rocks + exits + nests
-    aboveground_objects = a_rocks + exits  # + trees
+    aboveground_objects = a_rocks + bushes + exits  # + trees
     group_underground.add(underground_objects)
     group_aboveground.add(aboveground_objects)
 
