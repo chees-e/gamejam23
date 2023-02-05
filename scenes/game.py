@@ -765,15 +765,26 @@ def run(screen, params):
     for j in range(15):
         a_bg.blit(rivertile2, (49 * 60, j * 60, 60, 60))
 
+    playing = False
+
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return 0, {}
+        if underground and not playing:
+            pygame.mixer.music.load('./assets/music/underground-loop.wav')
+            pygame.mixer.music.play(-1)
+            playing = True
+        elif not underground and not playing:
+            pygame.mixer.music.load('./assets/music/aboveground-loop.wav')
+            pygame.mixer.music.play(-1)
+            playing = True
 
         # Checking for switiching sides
         if pygame.mouse.get_pressed(3)[0]:
             if rat.near_mouse() and near_exit(exits, rat):
                 underground = not underground
+                playing = False
                 for rock in a_rocks:
                     rock.update_image(underground)
                 time.sleep(0.25)
@@ -959,27 +970,25 @@ def run(screen, params):
                 if event.type == pygame.KEYDOWN or event.type == pygame.KEYUP:
                     # spd
                     if event.key == pygame.K_1 and total_wood >= 2 ** rat.upgrade_level[1][0]:
-                        rat.upgrade_level[1][0] = min(5, rat.upgrade_level[1][0] + 1)
                         total_wood -= 2 ** rat.upgrade_level[1][0]
+                        rat.upgrade_level[1][0] = min(5, rat.upgrade_level[1][0] + 1)
                     # moving cost
                     elif event.key == pygame.K_2 and total_wood >= 2 ** rat.upgrade_level[2][0]:
-                        rat.upgrade_level[2][0] = min(5, rat.upgrade_level[2][0] + 1)
                         total_wood -= 2 ** rat.upgrade_level[2][0]
+                        rat.upgrade_level[2][0] = min(5, rat.upgrade_level[2][0] + 1)
                     # max stamina
                     elif event.key == pygame.K_3 and total_wood >= 2 ** rat.upgrade_level[3][0]:
-                        rat.upgrade_level[3][0] = min(5, rat.upgrade_level[3][0] + 1)
                         total_wood -= 2 ** rat.upgrade_level[3][0]
+                        rat.upgrade_level[3][0] = min(5, rat.upgrade_level[3][0] + 1)
                     # stamina regen
                     elif event.key == pygame.K_4 and total_wood >= 2 ** rat.upgrade_level[4][0]:
-                        rat.upgrade_level[4][0] = min(5, rat.upgrade_level[4][0] + 1)
                         total_wood -= 2 ** rat.upgrade_level[4][0]
+                        rat.upgrade_level[4][0] = min(5, rat.upgrade_level[4][0] + 1)
                     # energy cost
                     elif event.key == pygame.K_5 and total_wood >= 2 ** rat.upgrade_level[5][0]:
-                        rat.upgrade_level[5][0] = min(5, rat.upgrade_level[5][0] + 1)
                         total_wood -= 2 ** rat.upgrade_level[5][0]
+                        rat.upgrade_level[5][0] = min(5, rat.upgrade_level[5][0] + 1)
 
-            if total_wood < 0:
-                total_wood = 0
 
             box = pygame.Surface((300, 400))
             box.fill(G.box_colour)
@@ -998,7 +1007,6 @@ def run(screen, params):
                 screen.blit(trunk, (left + 200, top + i * 76))
 
             for i in range(len(locations)):
-                print(i)
                 index = locations[i]
                 t = Text(index[0] + 75 / 8, index[1] + 75 / 4, f"{upgrade_text_names[i]}", 999, screen)
                 t.draw("white", 35)
