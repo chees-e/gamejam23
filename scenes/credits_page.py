@@ -23,9 +23,10 @@ def run(screen, params):
 # init pygame
 pygame.init()
 surface = pygame.display.set_mode((1500, 900))
+
 credits_bg = pygame_menu.themes.THEME_DEFAULT.copy()
 credits_bg.background_color = pygame_menu.baseimage.BaseImage(
-    image_path="./assets/menu_bg.png",
+    image_path="./assets/menu-bg.png",
     drawing_mode=pygame_menu.baseimage.IMAGE_MODE_FILL,
     drawing_offset=(0, 0)
 )

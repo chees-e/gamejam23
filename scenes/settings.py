@@ -23,7 +23,7 @@ surface = pygame.display.set_mode((1500, 900))
 
 settings_bg = pygame_menu.themes.THEME_DEFAULT.copy()
 settings_bg.background_color = pygame_menu.baseimage.BaseImage(
-    image_path="./assets/menu_bg.png",
+    image_path="./assets/menu-bg.png",
     drawing_mode=pygame_menu.baseimage.IMAGE_MODE_FILL,
     drawing_offset=(0, 0)
 )
@@ -33,6 +33,7 @@ settings_bg.widget_margin = (0, 30)
 settings_bg.widget_padding = 10
 settings_bg.widget_font_color = (255, 255, 255)
 settings_bg.widget_selection_effect = pygame_menu.widgets.RightArrowSelection(arrow_size=(30, 40))
+
 
 # define buttons
 def volume(screen):
