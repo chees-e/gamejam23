@@ -343,17 +343,17 @@ class Nest(Sprite):
         self.x = x
         self.y = y
         self.image = pygame.image.load("./assets/nest.png")
-        self.size = 75
         self.screen = screen
 
         self.boundaries = [999, 999, -999, -999]
 
         self.triggers = [
-            self.x + self.size / G.hitbox_scale,
-            self.y + self.size / G.hitbox_scale,
-            self.x + self.size * 3 / G.hitbox_scale,
-            self.y + self.size * 3 / G.hitbox_scale
+            self.x,
+            self.y,
+            self.x + 150,
+            self.y + 100
         ]
+        print(self.triggers)
 
     def draw(self, counter):
         if not underground:
@@ -465,88 +465,54 @@ def near_nest(nest, rat):
 def in_proximity(c, acc):
     if acc:
         for i in acc:
-            print((c[0] - i[0])**2 + (c[1] - i[1]) ** 2)
             if (c[0] - i[0]) ** 2 + (c[1] - i[1]) ** 2 <= (G.proximity_value ** 2):
                 return True
         return False
     else:
         return False
 
+def get_map_items(num_items):
+    acc = []
+    for _ in range(num_items):
+        random_values = [(random.randint(300, 1200), random.randint(100, 800)) for i in range(10000)]
+        v = [i for i in random_values if not in_proximity(i, acc)]
+        acc.append(random.choice(v))
+    return acc
+
 # Entry point
 def run(screen, params):
     global underground
     clock = pygame.time.Clock()
-
-    acc = []
-    a_acc = []
-
-    u_rocks = []
-    a_rocks = []
-    trees = []
-    exits = []
 
     num_rocks = 6
     num_exits = 2
     num_trees = 2
     num_roots = [random.randint(3, 5) for _ in range(num_trees)]
 
+    points = get_map_items(num_rocks * 2 + num_exits + num_trees + 1)
+    print(points)
 
     # generate rocks first
     # underground rocks
-    for i in range(num_rocks):
-        random_values = [(random.randint(300, 1200), random.randint(100, 800)) for i in range(10000)]
-        v = [i for i in random_values if not in_proximity(i, [(j.x, j.y) for j in u_rocks])]
-        try:
-            x, y = random.choice(v)
-        except:
-            x, y = random.choice(random_values)
-        u_rocks.append(Rock(x, y, screen))
+    u_rocks = [Rock(i[0], i[1], screen) for i in points[:num_rocks]]
 
     # aboveground rocks
-    for i in range(num_rocks):
-        random_values = [(random.randint(300, 1200), random.randint(100, 800)) for i in range(10000)]
-        v = [i for i in random_values if not in_proximity(i, [(j.x, j.y) for j in a_rocks])]
-        try:
-            x, y = random.choice(v)
-        except:
-            x, y = random.choice(random_values)
-        a_rocks.append(Rock(x, y, screen))
+    a_rocks = [Rock(i[0], i[1], screen) for i in points[num_rocks:num_rocks*2 - 1]]
 
     # generate exits
-    for i in range(num_exits):
-        random_values = [(random.randint(300, 1200), random.randint(100, 800)) for i in range(10000)]
-        v = [i for i in random_values if not in_proximity(i, [(j.x, j.y) for j in u_rocks + a_rocks + exits])]
-        try:
-            x, y = random.choice(v)
-        except:
-            x, y = random.choice(random_values)
-        exits.append(Exit(x, y, screen))
+    exits = [Exit(i[0], i[1], screen) for i in points[num_rocks * 2 - 1:num_rocks * 2 - 1 + num_exits]]
 
     # generate nest
-    random_values = [(random.randint(300, 1200), random.randint(100, 800)) for i in range(10000)]
-    v = [i for i in random_values if not in_proximity(i, [(j.x, j.y) for j in u_rocks + exits])]
-    try:
-        x, y = random.choice(v)
-    except:
-        x, y = random.choice(random_values)
-    nest = Nest(x, y, screen)
+    nest_location = points[num_rocks * 2 - 1 + num_exits:num_rocks * 2 + num_exits][0]
+    nest = Nest(nest_location[0], nest_location[1], screen)
 
     # generate trees last
-    for i in range(num_trees):
-        random_values = [(random.randint(300, 1200), random.randint(100, 800)) for i in range(10000)]
-        v = [i for i in random_values if not in_proximity(i, [(j.x, j.y) for j in u_rocks + a_rocks + exits + [nest] + trees])]
-        try:
-            x, y = random.choice(v)
-        except:
-            x, y = random.choice(random_values)
-        trees.append(Tree(x, y, num_roots[i], random.choice(G.root_colours), screen))
-        acc.append((x, y))
+    trees = [Tree(i[0], i[1], random.choice(num_roots), random.choice(G.root_colours), screen) for i in points[num_rocks * 2 + num_exits:]]
 
-    underground_objects = trees + u_rocks + exits + [nest]
+    underground_objects = u_rocks + exits + [nest] + trees
+    aboveground_objects = a_rocks + exits + trees
 
     #[print(i.x, i.y) for i in underground_objects]
-
-    aboveground_objects = trees + a_rocks + exits
 
     rat = Player(nest.x + 75, nest.y + 75, screen)
 
