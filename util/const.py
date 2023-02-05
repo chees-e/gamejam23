@@ -36,7 +36,7 @@ moving_stamina_cost = 0 # 0.5
 idle_stamina_regen = 0.5
 stamina_recharge_regen = 5
 
-hitbox_scale = 4
+hitbox_scale = 2.5
 
 proximity_value = 100
 
