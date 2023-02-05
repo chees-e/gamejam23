@@ -31,8 +31,7 @@ mainmenu = pygame_menu.themes.THEME_DEFAULT.copy() #copy default theme
 mmbg = pygame_menu.baseimage.BaseImage(
     image_path="./assets/title-screen.png",
     drawing_mode=pygame_menu.baseimage.IMAGE_MODE_FILL,
-    drawing_offset=(0,0)
-
+    drawing_offset=(0, 0)
 )
 mainmenu.background_color = mmbg #set theme background color as the image
 mainmenu.widget_font = pygame_menu.font.FONT_8BIT
