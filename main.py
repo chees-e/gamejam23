@@ -2,7 +2,7 @@ import pygame
 import random
 
 import util.const as G
-from scenes import menu, game, settings, credits_page
+from scenes import menu, game, settings, credits_page, gameend
 
 
 class Game:
@@ -12,15 +12,17 @@ class Game:
             menu,
             game,
             settings,
-            credits_page
+            credits_page,
+            gameend
         ]
 
         print("Game started")
 
     def run(self):
-        next_scene = 0
         params = {}
+        next_scene = 0
         while True:
+            print("SCENE", next_scene)
             next_scene, params = self.scenes[next_scene].run(self.screen, params)
 
 

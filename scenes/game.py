@@ -14,7 +14,8 @@ group_aboveground = pygame.sprite.Group()
 group_all = pygame.sprite.Group()
 group_u_obstacles = pygame.sprite.Group()
 group_a_obstacles = pygame.sprite.Group()
-
+group_u_mats = pygame.sprite.Group()
+group_a_mats = pygame.sprite.Group()
 
 # Angle: East = 0, goes CLOCKWISE
 def get_theta(x1, y1, x2, y2):  # Starts east, clockwise rotation
@@ -72,6 +73,29 @@ class RootCoord(Sprite):
     def update(self):
         self.rect.x = self.x - screen_offset
 
+
+class Material(Sprite):
+    def __init__(self, x, y, value, under=True):
+        Sprite.__init__(self)
+        self.x = x
+        self.y = y
+        self.size = 50
+        self.under = under
+        self.value = value # 0, 1, 2
+        if not under:
+            self.image = random.choice(
+                [pygame.transform.scale(pygame.image.load("./assets/apple.png"), (self.size, self.size)),
+                pygame.transform.scale(pygame.image.load("./assets/carrot.png"), (self.size, self.size)),
+                pygame.transform.scale(pygame.image.load("./assets/cheese.png"), (self.size, self.size))]
+            )
+        else:
+            self.image = pygame.transform.scale(pygame.image.load("./assets/iron.png"), (self.size, self.size))
+
+        self.rect = pygame.Rect(self.x - self.image.get_width() // 2, self.y - self.image.get_height() // 2,
+                                self.image.get_width(), self.image.get_height())
+
+    def update(self):
+        self.rect.x = self.x - screen_offset
 
 class Root:
     def __init__(self, x, y, thickness, angle, maxlength, speed, depth, colour, screen):
@@ -386,6 +410,31 @@ class Rock(Sprite):
     #         self.image = pygame.transform.scale(pygame.image.load("./assets/rock1.png"), (self.size, self.size))
     #     self.screen.blit(self.image, (self.x, self.y))
 
+class Bush(Sprite):
+    def __init__(self, x, y, screen):
+        Sprite.__init__(self)
+        self.size = random.randint(25, 50)
+        self.image = pygame.transform.scale(pygame.image.load("./assets/bush.png"), (self.size, self.size))
+        self.x = x
+        self.y = y
+        self.rect = pygame.Rect(self.x - self.image.get_width() // 2, self.y - self.image.get_width() // 2,
+                                self.image.get_width(), self.image.get_height())
+        self.radius = self.size / G.hitbox_scale
+        self.under = True
+
+        self.boundaries = [
+            self.x + self.size / G.hitbox_scale,
+            self.y + self.size / G.hitbox_scale,
+            self.x + self.size * 3 / G.hitbox_scale,
+            self.y + self.size * 3 / G.hitbox_scale
+        ]
+
+        self.screen = screen
+
+    def update(self):
+        self.rect.x = self.x - self.image.get_width() // 2 - screen_offset
+        pygame.draw.circle(self.screen, "red", self.rect.center, 10)
+
 
 class Exit(Sprite):
     def __init__(self, x, y, screen):
@@ -400,10 +449,10 @@ class Exit(Sprite):
         self.boundaries = [999, 999, -999, -999]
 
         self.triggers = [
-            self.x + self.size / G.hitbox_scale,
-            self.y + self.size / G.hitbox_scale,
-            self.x + self.size * 3 / G.hitbox_scale,
-            self.y + self.size * 3 / G.hitbox_scale
+            self.x + self.size / G.hitbox_scale - 20,
+            self.y + self.size / G.hitbox_scale - 20,
+            self.x + self.size * 3 / G.hitbox_scale + 20,
+            self.y + self.size * 3 / G.hitbox_scale + 20
         ]
 
     def update(self):
@@ -479,7 +528,7 @@ class Player(pygame.sprite.DirtySprite):
             [0, -0.05],  # move cost
             [0, 50],  # max stam
             [0, 0.05],  # stam regen
-            [0, 0.0125]  # energy cost
+            [0, 0.004]  # energy cost
         ]
 
         self.spd = 2 + self.upgrade_level[1][0] * self.upgrade_level[1][-1]
@@ -515,6 +564,9 @@ class Player(pygame.sprite.DirtySprite):
 
             self.x += delta_x
             self.y += delta_y
+
+            if not underground and self.x > 2*G.width-2*60-12:
+                self.x -= delta_x
 
             self.rect.x = self.x - screen_offset - self.width // 2
             self.rect.y = self.y - self.height // 2
@@ -565,6 +617,8 @@ def near_exit(exits, rat):
 
 
 def near_nest(nests, rat):
+    if not underground:
+        return False
     for nest in nests:
         b = nest.triggers
         if b[0] <= rat.x <= b[2] and b[1] <= rat.y <= b[3]:
@@ -614,8 +668,9 @@ def run(screen, params):
     global underground, screen_offset
     clock = pygame.time.Clock()
 
-    # 0, nests, Rocks_u, rocks_a, exits, trees
-    num_items = [0, 3, 10, 10, 4, 6, 0]
+    # 0, nests, Rocks_u, rocks_a, bushes,  exits, trees
+    num_items = [0, 3, 10, 10, 28, 4, 8, 0]
+    num_mats = 5
     item_r = [sum(num_items[:i + 1]) for i in range(len(num_items))]  # item range
     print(item_r)
     num_roots = [random.randint(3, 5) for _ in range(num_items[4])]
@@ -633,20 +688,29 @@ def run(screen, params):
     # aboveground rocks
     a_rocks = [Rock(i[0], i[1], screen) for i in points[item_r[2]:item_r[3]]]
 
+    # bushes
+    bushes = [Bush(i[0], i[1], screen) for i in points[item_r[3]:item_r[4]]]
+
     # generate exits
-    exits = [Exit(i[0], i[1], screen) for i in points[item_r[3]:item_r[4]]]
+    exits = [Exit(i[0], i[1], screen) for i in points[item_r[4]:item_r[5]]]
 
     # generate trees last
     trees = [Tree(i[0], i[1], random.choice(num_roots), random.choice(G.root_colours), screen) for i in
-             points[item_r[4]:item_r[5]]]
+             points[item_r[5]:item_r[6]]]
+
+    for i in range(num_mats):
+        group_a_mats.add(Material(random.randint(G.tiles_width, 2*(G.width-G.tiles_width)),
+                                  random.randint(G.tiles_height, G.height-G.tiles_height), random.randint(0,2), False))
+        group_u_mats.add(Material(random.randint(G.tiles_width, 2*(G.width-G.tiles_width)),
+                                  random.randint(G.tiles_height, G.height-G.tiles_height), 1, True))
 
     # TODO try using groups
     underground_objects = u_rocks + exits + nests
-    aboveground_objects = a_rocks + exits  # + trees
+    aboveground_objects = a_rocks + bushes + exits  # + trees
     group_underground.add(underground_objects)
     group_aboveground.add(aboveground_objects)
 
-    group_all.add(underground_objects, aboveground_objects, trees)
+    group_all.add(underground_objects, aboveground_objects, trees, group_u_mats, group_a_mats)
     group_u_obstacles.add(trees, u_rocks)
     group_a_obstacles.add(trees, a_rocks)
 
@@ -661,6 +725,7 @@ def run(screen, params):
     chopping_depth = 0
 
     total_wood = 0
+    total_iron = 0
 
     required_power = [1, 300, 150, 75, 38, 20, 1]  # for chopping trees
     power_colour = ["black", "red", "orange", "yellow", "green", "cyan", "black"]
@@ -675,44 +740,80 @@ def run(screen, params):
              pygame.image.load("./assets/dirt3.png"),
              pygame.image.load("./assets/dirt-simple.png")]
 
-    for i in range(25):
+    for i in range(50):
         for j in range(15):
             t = pygame.transform.scale(random.choice(tiles), (60, 60))
             img = pygame.transform.rotate(t, round(random.randint(0, 3)) * 90)
             u_bg.blit(img, (i * 60, j * 60, 60, 60))
 
     tile = pygame.transform.scale(pygame.image.load("./assets/grass1.png"), (60, 60))
+    rivertile = pygame.transform.scale(pygame.image.load("./assets/river1.png"), (60, 60))
+    rivertile2 = pygame.transform.scale(pygame.image.load("./assets/river2.png"), (60, 60)) # todo: not going into river
 
-    for i in range(25):
+    for i in range(48):
         for j in range(15):
             if round(random.random()):
                 a_bg.blit(pygame.transform.flip(tile, True, False), (i * 60, j * 60, 60, 60))
             else:
                 a_bg.blit(tile, (i * 60, j * 60, 60, 60))
 
+    for j in range(15):
+        a_bg.blit(rivertile, (48 * 60, j * 60, 60, 60))
+    for j in range(15):
+        a_bg.blit(rivertile2, (49 * 60, j * 60, 60, 60))
+
+    playing = False
+
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return 0, {}
+        if underground and not playing:
+            pygame.mixer.music.load('./assets/music/underground-loop.wav')
+            pygame.mixer.music.play(-1)
+            playing = True
+        elif not underground and not playing:
+            pygame.mixer.music.load('./assets/music/aboveground-loop.wav')
+            pygame.mixer.music.play(-1)
+            playing = True
 
         # Checking for switiching sides
-        if pygame.mouse.get_pressed(3)[0] and rat.near_mouse() and near_exit(exits, rat):
-            underground = not underground
-            for rock in a_rocks:
-                rock.update_image(underground)
-            time.sleep(0.25)
+        if pygame.mouse.get_pressed(3)[0]:
+            if rat.near_mouse() and near_exit(exits, rat):
+                underground = not underground
+                playing = False
+                for rock in a_rocks:
+                    rock.update_image(underground)
+                time.sleep(0.25)
+            else:
+                # check for material
+                if underground:
+                    for obj in group_u_mats.sprites():
+                        if pygame.sprite.collide_rect(ratrect, obj):
+                            total_iron += obj.value
+                            group_u_mats.remove(obj)
+                else:
+                    for obj in group_a_mats.sprites():
+                        if pygame.sprite.collide_rect(ratrect, obj):
+                            rat.energy = min(rat.max_energy, rat.energy + (obj.value + 1) * 50)
+                            group_a_mats.remove(obj)
 
         if underground:
             screen.blit(u_bg, (-screen_offset, 0, 1500, 900))
         else:
             if update_counter % 29 == 0 and round(random.random()):
-                for i in range(25):
+                for i in range(48):
                     for j in range(15):
                         if round(random.random() * 4 - 4):
                             a_bg.blit(pygame.transform.flip(tile, True, False), (i * 60, j * 60, 60, 60))
                         else:
                             a_bg.blit(tile, (i * 60, j * 60, 60, 60))
-            screen.blit(a_bg, (0, 0, 1500, 900))
+                for j in range(15):
+                    a_bg.blit(rivertile, (48 * 60, j * 60, 60, 60))
+                for j in range(15):
+                    a_bg.blit(rivertile2, (49 * 60, j * 60, 60, 60))
+
+            screen.blit(a_bg, (-screen_offset, 0, 1500, 900))
 
         px, py = rat.get_mouth()
         mx, my = pygame.mouse.get_pos()
@@ -720,22 +821,13 @@ def run(screen, params):
         ratrect = Temp(px, py)
         mouserect = Temp(mx, my)
 
-        if len(display_text) > 0:
-            img = pygame.transform.scale(pygame.image.load("./assets/wood_1fab5.png"), (50, 50))
-            screen.blit(img,
-                        (display_text[0].x - screen_offset - rat.image.get_width() / 4,
-                         display_text[0].y - rat.image.get_height() / 4))  # TODO check
-            display_text[0].draw("white", 30)
-            wood_colour = "green"
-        else:
-            wood_colour = "white"
-
         if underground:
             # Update tree
             for obj in trees:
                 obj.drawroots(update_counter)
 
             group_underground.draw(screen)
+            group_u_mats.draw(screen)
 
             # the root depth if mouse is currently hovering over one
             group_root.update()
@@ -746,44 +838,45 @@ def run(screen, params):
             else:
                 hover_root_depth = collided_root.depth
 
-            if pygame.mouse.get_pressed(3)[0] and rat.near_mouse() and hover_root_depth > 0:
-                if chopping_meter == 0:
-                    chopping_location = (mx, my)
-                    chopping_depth = hover_root_depth
-                else:
-                    if (mx - chopping_location[0]) ** 2 + (my - chopping_location[1]) ** 2 > 4:
-                        chopping_meter = -1
+            if pygame.mouse.get_pressed(3)[0]:
+                if rat.near_mouse() and hover_root_depth > 0:
+                    if chopping_meter == 0:
+                        chopping_location = (mx, my)
+                        chopping_depth = hover_root_depth
+                    else:
+                        if (mx - chopping_location[0]) ** 2 + (my - chopping_location[1]) ** 2 > 4:
+                            chopping_meter = -1
 
-                chopping_meter += 1
-                if rat.stamina <= 0:
-                    chopping_meter = 0
-                else:
-                    rat.stamina -= G.chopping_stamina_cost_base
+                    chopping_meter += 1
+                    if rat.stamina <= 0:
+                        chopping_meter = 0
+                    else:
+                        rat.stamina -= G.chopping_stamina_cost_base
 
-                    pygame.draw.line(screen, power_colour[hover_root_depth],
-                                     (round(rat.x - screen_offset) - rat.image.get_width() // 2,
-                                      round(rat.y) - rat.image.get_height()),
-                                     (round(
-                                         rat.x - screen_offset - rat.image.get_width() // 2 + rat.image.get_width() * (
-                                                 chopping_meter / required_power[hover_root_depth])),
-                                      round(rat.y) - rat.image.get_height()), 10)
+                        pygame.draw.line(screen, power_colour[hover_root_depth],
+                                         (round(rat.x - screen_offset) - rat.image.get_width() // 2,
+                                          round(rat.y) - rat.image.get_height()),
+                                         (round(
+                                             rat.x - screen_offset - rat.image.get_width() // 2 + rat.image.get_width() * (
+                                                     chopping_meter / required_power[hover_root_depth])),
+                                          round(rat.y) - rat.image.get_height()), 10)
 
-                if chopping_meter > required_power[hover_root_depth]:
-                    chopping_meter = 0
-                    for i in trees:
-                        wood_obtained = i.trim(chopping_location[0] + screen_offset, chopping_location[1])
-                        if wood_obtained > 0:
-                            display_text.append(
-                                Text(round(rat.x - screen_offset) - rat.image.get_width() / 4,
-                                     round(rat.y) - rat.image.get_height(),
-                                     f"+{wood_obtained}", 60, screen))
-                        # pygame.draw.circle(screen, "red", (px,py), 10) # makes the rat looks like a clown
-                        total_wood += wood_obtained
+                    if chopping_meter > required_power[hover_root_depth]:
+                        chopping_meter = 0
+                        for i in trees:
+                            wood_obtained = i.trim(chopping_location[0] + screen_offset, chopping_location[1])
+                            if wood_obtained > 0:
+                                display_text.append(
+                                    Text(round(rat.x - screen_offset) - rat.image.get_width() / 4,
+                                         round(rat.y) - rat.image.get_height(),
+                                         f"+{wood_obtained}", 60, screen))
+                            # pygame.draw.circle(screen, "red", (px,py), 10) # makes the rat looks like a clown
+                            total_wood += wood_obtained
             else:
                 chopping_meter = 0
 
             if near_nest(nests, rat):
-                rat.energy = min(rat.max_energy, rat.energy + G.energy_recharge_regen)
+                # rat.energy = min(rat.max_energy, rat.energy + G.energy_recharge_regen)
                 rat.stamina = min(rat.max_stamina, rat.stamina + G.stamina_recharge_regen)
 
             if hover_root_depth > 0:
@@ -809,6 +902,7 @@ def run(screen, params):
                 obj.drawroots(update_counter)
 
             group_aboveground.draw(screen)
+            group_a_mats.draw(screen)
 
             rat.turn(pygame.mouse.get_pos())
 
@@ -820,6 +914,26 @@ def run(screen, params):
                     break
             else:
                 rat.move(rat.spd)
+
+            if rat.x > 2 * G.width - 150:
+                # River:
+                for event in pygame.event.get():
+                    if event.type == pygame.KEYDOWN:
+                        # spd
+                        if event.key == pygame.K_1 and total_wood >= 2 ** rat.upgrade_level[1][0]:
+                            rat.upgrade_level[1][0] = min(5, rat.upgrade_level[1][0] + 1)
+                            total_wood -= 2 ** rat.upgrade_level[1][0]
+
+
+        if len(display_text) > 0:
+            img = pygame.transform.scale(pygame.image.load("./assets/wood_1fab5.png"), (50, 50))
+            screen.blit(img,
+                        (display_text[0].x - screen_offset - rat.image.get_width() / 4,
+                         display_text[0].y - rat.image.get_height() / 4))  # TODO check
+            display_text[0].draw("white", 30)
+            wood_colour = "green"
+        else:
+            wood_colour = "white"
 
         rat.energy -= rat.energy_cost
 
@@ -858,54 +972,55 @@ def run(screen, params):
         stam = Text(115, 145, f"Stamina", 99, screen)
         stam.draw("black", 30)
 
-        for event in pygame.event.get():
-            if event.type == pygame.KEYDOWN or event.type == pygame.KEYUP:
-                # spd
-                if event.key == pygame.K_1 and total_wood >= 2 ** rat.upgrade_level[1][0]:
-                    rat.upgrade_level[1][0] = min(5, rat.upgrade_level[1][0] + 1)
-                    total_wood -= 2 ** rat.upgrade_level[1][0]
-                # moving cost
-                elif event.key == pygame.K_2 and total_wood >= 2 ** rat.upgrade_level[2][0]:
-                    rat.upgrade_level[2][0] = min(5, rat.upgrade_level[2][0] + 1)
-                    total_wood -= 2 ** rat.upgrade_level[2][0]
-                # max stamina
-                elif event.key == pygame.K_3 and total_wood >= 2 ** rat.upgrade_level[3][0]:
-                    rat.upgrade_level[3][0] = min(5, rat.upgrade_level[3][0] + 1)
-                    total_wood -= 2 ** rat.upgrade_level[3][0]
-                # stamina regen
-                elif event.key == pygame.K_4 and total_wood >= 2 ** rat.upgrade_level[4][0]:
-                    rat.upgrade_level[4][0] = min(5, rat.upgrade_level[4][0] + 1)
-                    total_wood -= 2 ** rat.upgrade_level[4][0]
-                # energy cost
-                elif event.key == pygame.K_5 and total_wood >= 2 ** rat.upgrade_level[5][0]:
-                    rat.upgrade_level[5][0] = min(5, rat.upgrade_level[5][0] + 1)
-                    total_wood -= 2 ** rat.upgrade_level[5][0]
+        if near_nest(nests, rat):
+            for event in pygame.event.get():
+                if event.type == pygame.KEYDOWN:
+                    # spd
+                    if event.key == pygame.K_1 and total_wood >= 2 ** rat.upgrade_level[1][0]:
+                        total_wood -= 2 ** rat.upgrade_level[1][0]
+                        rat.upgrade_level[1][0] = min(5, rat.upgrade_level[1][0] + 1)
+                    # moving cost
+                    elif event.key == pygame.K_2 and total_wood >= 2 ** rat.upgrade_level[2][0]:
+                        total_wood -= 2 ** rat.upgrade_level[2][0]
+                        rat.upgrade_level[2][0] = min(5, rat.upgrade_level[2][0] + 1)
+                    # max stamina
+                    elif event.key == pygame.K_3 and total_wood >= 2 ** rat.upgrade_level[3][0]:
+                        total_wood -= 2 ** rat.upgrade_level[3][0]
+                        rat.upgrade_level[3][0] = min(5, rat.upgrade_level[3][0] + 1)
+                    # stamina regen
+                    elif event.key == pygame.K_4 and total_wood >= 2 ** rat.upgrade_level[4][0]:
+                        total_wood -= 2 ** rat.upgrade_level[4][0]
+                        rat.upgrade_level[4][0] = min(5, rat.upgrade_level[4][0] + 1)
+                    # energy cost
+                    elif event.key == pygame.K_5 and total_wood >= 2 ** rat.upgrade_level[5][0]:
+                        total_wood -= 2 ** rat.upgrade_level[5][0]
+                        rat.upgrade_level[5][0] = min(5, rat.upgrade_level[5][0] + 1)
 
-        box = pygame.Surface((300, 400))
-        box.fill(G.box_colour)
-        screen.blit(box, (0, 250))
-        pygame.draw.rect(screen, G.border_colour, pygame.Rect(0, 250, 300, 400), 10)
-        trunk = pygame.transform.scale(pygame.image.load("./assets/wood_1fab5.png"), (75, 75))
 
-        left = 10
-        top = 260
+            box = pygame.Surface((300, 400))
+            box.fill(G.box_colour)
+            screen.blit(box, (0, 250))
+            pygame.draw.rect(screen, G.border_colour, pygame.Rect(0, 250, 300, 400), 10)
+            trunk = pygame.transform.scale(pygame.image.load("./assets/wood_1fab5.png"), (75, 75))
 
-        upgrade_text_names = ['SPD', 'MOVE COST', 'MAX STAM', 'STAM REGEN', 'ENERGY COST']
+            left = 10
+            top = 260
 
-        locations = []
-        for i in range(5):
-            locations.append((left, top + i * 76))
-            screen.blit(trunk, (left + 200, top + i * 76))
+            upgrade_text_names = ['SPD', 'MOVE COST', 'MAX STAM', 'STAM REGEN', 'ENERGY COST']
 
-        for i in range(len(locations)):
-            print(i)
-            index = locations[i]
-            t = Text(index[0] + 75 / 8, index[1] + 75 / 4, f"{upgrade_text_names[i]}", 999, screen)
-            t.draw("white", 35)
-            t2 = Text(index[0] + 75 / 4, index[1] + 75 / 2 + 75 / 8, f"Lv. {rat.upgrade_level[i + 1][0]}", 999, screen)
-            t2.draw("white", 30)
-            t3 = Text(index[0] + 225, index[1] + 75 / 4 + 75 / 8, f"{2 ** rat.upgrade_level[1 + i][0]}", 999, screen)
-            t3.draw("white", 50)
+            locations = []
+            for i in range(5):
+                locations.append((left, top + i * 76))
+                screen.blit(trunk, (left + 200, top + i * 76))
+
+            for i in range(len(locations)):
+                index = locations[i]
+                t = Text(index[0] + 75 / 8, index[1] + 75 / 4, f"{upgrade_text_names[i]}", 999, screen)
+                t.draw("white", 35)
+                t2 = Text(index[0] + 75 / 4, index[1] + 75 / 2 + 75 / 8, f"Lv. {rat.upgrade_level[i + 1][0]}", 999, screen)
+                t2.draw("white", 30)
+                t3 = Text(index[0] + 225, index[1] + 75 / 4 + 75 / 8, f"{2 ** rat.upgrade_level[1 + i][0]}", 999, screen)
+                t3.draw("white", 50)
 
         ## Loop updates
         for text in display_text:
@@ -915,3 +1030,7 @@ def run(screen, params):
         update_counter += 1
         pygame.display.flip()
         clock.tick(60)
+
+        if rat.energy <= 0:
+            screen.blit(u_bg, (-screen_offset, 0, 1500, 900))
+            return 4, {"won": False} # game over
