@@ -71,7 +71,7 @@ def prev(screen, page):
 
 def next(screen, page):
     print(page)
-    if page==7:
+    if page==8:
         return
     else:
         page = page + 1
