@@ -1017,4 +1017,5 @@ def run(screen, params):
         clock.tick(60)
 
         if rat.energy <= 0:
-            return 0, {} # game over
+            screen.blit(u_bg, (-screen_offset, 0, 1500, 900))
+            return 4, {"won": False} # game over
