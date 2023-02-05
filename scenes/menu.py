@@ -37,7 +37,11 @@ mmbg = pygame_menu.baseimage.BaseImage(
 mainmenu.background_color = mmbg #set theme background color as the image
 mainmenu.widget_font = pygame_menu.font.FONT_8BIT
 mainmenu.title_bar_style = pygame_menu.widgets.MENUBAR_STYLE_NONE
-mainmenu.widget_padding = 20
+mainmenu.widget_margin = (0, 30)
+mainmenu.widget_padding = 10
+mainmenu.widget_background_color = (202, 217, 184)
+#mainmenu.widget_selection_effect = pygame_menu.widgets.core.Selection.set_background_color(color=[13, 54, 13])
+
 # define buttons
 def start(screen):
     game.run(screen, {})
