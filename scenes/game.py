@@ -94,6 +94,8 @@ class Material(Sprite):
         self.rect = pygame.Rect(self.x - self.image.get_width() // 2, self.y - self.image.get_height() // 2,
                                 self.image.get_width(), self.image.get_height())
 
+    def update(self):
+        self.rect.x = self.x - screen_offset
 
 class Root:
     def __init__(self, x, y, thickness, angle, maxlength, speed, depth, colour, screen):
@@ -708,7 +710,7 @@ def run(screen, params):
     group_underground.add(underground_objects)
     group_aboveground.add(aboveground_objects)
 
-    group_all.add(underground_objects, aboveground_objects, trees)
+    group_all.add(underground_objects, aboveground_objects, trees, group_u_mats, group_a_mats)
     group_u_obstacles.add(trees, u_rocks)
     group_a_obstacles.add(trees, a_rocks)
 
@@ -1020,4 +1022,5 @@ def run(screen, params):
         clock.tick(60)
 
         if rat.energy <= 0:
-            return 0, {} # game over
+            screen.blit(u_bg, (-screen_offset, 0, 1500, 900))
+            return 4, {"won": False} # game over

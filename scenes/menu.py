@@ -28,13 +28,12 @@ pygame.init()
 surface = pygame.display.set_mode((1500, 900))
 
 # create custom theme
-menu_bg = pygame_menu.themes.THEME_DEFAULT.copy()  # copy default theme
-mmbg = pygame_menu.baseimage.BaseImage(
+menu_bg = pygame_menu.themes.THEME_DEFAULT.copy() #copy default theme
+menu_bg.background_color = pygame_menu.baseimage.BaseImage(
     image_path="./assets/title-screen.png",
     drawing_mode=pygame_menu.baseimage.IMAGE_MODE_FILL,
     drawing_offset=(0, 0)
 )
-menu_bg.background_color = mmbg  # set theme background color as the image
 menu_bg.widget_font = pygame_menu.font.FONT_8BIT
 menu_bg.title_bar_style = pygame_menu.widgets.MENUBAR_STYLE_NONE
 menu_bg.widget_margin = (0, 30)
