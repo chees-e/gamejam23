@@ -7,10 +7,10 @@ from scenes import menu
 # RV:
 # next scene, next scenes parameters
 # Entry point
-def run(screen, params):
+def run(screen, params, page):
     while True:
         tutorial = pygame_menu.Menu('', 1500, 900, theme=mainmenu)
-
+        tutorial.add.image(tutorialimages[page])
         tutorial.add.button('PREVIOUS', prev, screen, page)
         tutorial.add.button('NEXT', next, screen, page)
         tutorial.add.button('Back', back, screen)
@@ -21,8 +21,7 @@ def run(screen, params):
 # init pygame
 pygame.init()
 surface = pygame.display.set_mode((1500, 900))
-page = 0
-# have a list of tutorial images, "page" is the list index to display
+tutorialimages=['./assets/dirt1.png', './assets/dirt2.png', './assets/dirt3.png']
 
 mainmenu = pygame_menu.themes.THEME_DEFAULT.copy()
 mainmenu.background_color = (4,4,4) #set theme background color as the image
@@ -36,12 +35,17 @@ mainmenu.widget_selection_effect = pygame_menu.widgets.RightArrowSelection(arrow
 # define buttons
 def prev(screen, page):
     print(page)
-    page = page - 1
-    return page
+    if page==0:
+        return
+    else:
+        page = page - 1
+        run(screen, {}, page)
+        return
 
 def next(screen, page):
     print(page)
     page = page + 1
+    run(screen, {}, page)
     return page
 
 

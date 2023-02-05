@@ -50,7 +50,7 @@ def start(screen):
 
 def go_to_tutorial(screen):
     # tutorial page
-    tutorial.run(screen, {})
+    tutorial.run(screen, {}, 0)
     pass
 
 
