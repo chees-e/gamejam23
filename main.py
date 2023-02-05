@@ -2,7 +2,7 @@ import pygame
 import random
 
 import util.const as G
-from scenes import menu, game, settings, credits_page, gameend
+from scenes import menu, game, credits_page, gameend
 
 
 class Game:
@@ -11,7 +11,6 @@ class Game:
         self.scenes = [
             menu,
             game,
-            settings,
             credits_page,
             gameend
         ]

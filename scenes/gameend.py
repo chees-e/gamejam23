@@ -2,7 +2,6 @@ import pygame
 import util.const as G
 
 
-
 # RV:
 # next scene, next scenes parameters
 # Entry point
@@ -22,11 +21,11 @@ def run(screen, params):
 
             render = pygame.font.SysFont(None, 160).render("Game Over", True, "maroon")
 
-            screen.blit(render, (G.width//2 - render.get_width() // 2, G.height//2 - render.get_height() // 2))
+            screen.blit(render, (G.width // 2 - render.get_width() // 2, G.height // 2 - render.get_height() // 2))
 
             render = pygame.font.SysFont(None, 80).render("Click anywhere to Continue", True, "maroon")
 
-            screen.blit(render, (G.width//2 - render.get_width() // 2, G.height//2 - render.get_height() + 160))
+            screen.blit(render, (G.width // 2 - render.get_width() // 2, G.height // 2 - render.get_height() + 160))
 
             pygame.display.flip()
             clock.tick(60)
