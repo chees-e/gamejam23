@@ -267,7 +267,8 @@ class Tree(Sprite):
 
         self.x = x
         self.y = y
-        self.rect = pygame.Rect(self.x-self.image.get_width()//2, self.y-self.image.get_height()//2, self.image.get_width(), self.image.get_height())
+        self.rect = pygame.Rect(self.x - self.image.get_width() // 2, self.y - self.image.get_height() // 2,
+                                self.image.get_width(), self.image.get_height())
         self.radius = self.size / G.hitbox_scale
 
         self.underground_y_offset = 10
@@ -307,7 +308,8 @@ class Tree(Sprite):
             self.image = pygame.transform.scale(pygame.image.load("./assets/tree-trunk.png"), (self.size, self.size))
 
         self.screen.blit(self.image, (self.x - self.image.get_width() // 2 - screen_offset, y))
-        self.rect = pygame.Rect(self.x-self.image.get_width()//2 - screen_offset, self.y-self.image.get_height()//2, self.image.get_width(), self.image.get_height())
+        self.rect = pygame.Rect(self.x - self.image.get_width() // 2 - screen_offset,
+                                self.y - self.image.get_height() // 2, self.image.get_width(), self.image.get_height())
 
         pygame.draw.circle(self.screen, "red", self.rect.center, 10)
         pygame.draw.circle(self.screen, "yellow", (self.rect.x, self.rect.y), 10)
@@ -339,11 +341,11 @@ class Tree(Sprite):
             self.roots[i].extend()
 
     def update(self):
-        self.rect.x =self.x - self.image.get_width()//2 - screen_offset
+        self.rect.x = self.x - self.image.get_width() // 2 - screen_offset
         if underground:
-            self.rect.y = self.y - self.image.get_height()//2
+            self.rect.y = self.y - self.image.get_height() // 2
         else:
-            self.rect.y = self.y - self.image.get_height()//2 - self.underground_y_offset
+            self.rect.y = self.y - self.image.get_height() // 2 - self.underground_y_offset
 
 
 class Rock(Sprite):
@@ -353,15 +355,16 @@ class Rock(Sprite):
         self.image = pygame.transform.scale(pygame.image.load("./assets/rock-underground.png"), (self.size, self.size))
         self.x = x
         self.y = y
-        self.rect = pygame.Rect(self.x-self.image.get_width()//2, self.y-self.image.get_width()//2, self.image.get_width(), self.image.get_height())
+        self.rect = pygame.Rect(self.x - self.image.get_width() // 2, self.y - self.image.get_width() // 2,
+                                self.image.get_width(), self.image.get_height())
         self.radius = self.size / G.hitbox_scale
         self.under = True
 
         self.boundaries = [
             self.x + self.size / G.hitbox_scale,
-            self.y+ self.size / G.hitbox_scale,
+            self.y + self.size / G.hitbox_scale,
             self.x + self.size * 3 / G.hitbox_scale,
-            self.y+ self.size * 3 / G.hitbox_scale
+            self.y + self.size * 3 / G.hitbox_scale
         ]
 
         self.screen = screen
@@ -375,9 +378,8 @@ class Rock(Sprite):
                 self.image = pygame.transform.scale(pygame.image.load("./assets/rock1.png"), (self.size, self.size))
 
     def update(self):
-        self.rect.x = self.x -self.image.get_width()//2 - screen_offset
+        self.rect.x = self.x - self.image.get_width() // 2 - screen_offset
         pygame.draw.circle(self.screen, "red", self.rect.center, 10)
-
 
     # def draw(self, counter):
     #     if not underground: # make this a function to switch
@@ -440,7 +442,7 @@ class Nest(Sprite):
 class Temp(Sprite):
     def __init__(self, x, y):
         Sprite.__init__(self)
-        self.rect = pygame.Rect(x-1,y-1,3,3)
+        self.rect = pygame.Rect(x - 1, y - 1, 3, 3)
 
 
 class Player(pygame.sprite.DirtySprite):
@@ -464,7 +466,7 @@ class Player(pygame.sprite.DirtySprite):
         self.image = pygame.image.load("./assets/rat3.png")
         self.width = self.image.get_width()
         self.height = self.image.get_height()
-        self.radius = self.width//2
+        self.radius = self.width // 2
         self.rect = pygame.Rect(x - self.width // 2, y - self.height // 2,
                                 self.image.get_width(), self.image.get_height())
 
@@ -538,7 +540,8 @@ class Player(pygame.sprite.DirtySprite):
     def draw(self):
         for i in range(len(self.trail)):
             curtrail = self.trail[i]
-            pygame.draw.circle(self.screen, G.trail_colour, (curtrail[0] - screen_offset, curtrail[1]), self.image.get_width() // (i + 3))
+            pygame.draw.circle(self.screen, G.trail_colour, (curtrail[0] - screen_offset, curtrail[1]),
+                               self.image.get_width() // (i + 3))
         rotated = pygame.transform.rotate(self.image, -self.direction - self.offset)
         self.screen.blit(rotated,
                          (self.x - rotated.get_width() // 2 - screen_offset,
@@ -559,6 +562,7 @@ def near_exit(exits, rat):
         b = i.triggers
         if b[0] <= rat.x <= b[2] and b[1] <= rat.y <= b[3]:
             return True
+
 
 def near_nest(nests, rat):
     for nest in nests:
@@ -584,13 +588,13 @@ def get_map_items(num_items):
         print("Too many tiles")
         return []
     acc = []
-    tiles = random.sample([(i,j) for i in range(1,2*G.tiles_x-1) for j in range(1,G.tiles_y-1)], num_items)
-    if tiles[0][0] > (G.tiles_y-2):
+    tiles = random.sample([(i, j) for i in range(1, 2 * G.tiles_x - 1) for j in range(1, G.tiles_y - 1)], num_items)
+    if tiles[0][0] > (G.tiles_y - 2):
         tiles.pop(0)
-        newtile = (random.randint(1,G.tiles_x-2), random.randint(1,G.tiles_y-2))
+        newtile = (random.randint(1, G.tiles_x - 2), random.randint(1, G.tiles_y - 2))
         while newtile in tiles:
             newtile = (random.randint(1, G.tiles_x - 2), random.randint(1, G.tiles_y - 2))
-        tiles.insert(0, newtile) # Guarantees the first tile to be in the first frame
+        tiles.insert(0, newtile)  # Guarantees the first tile to be in the first frame
 
     print(tiles)
     for (tilex, tiley) in tiles:
@@ -612,11 +616,11 @@ def run(screen, params):
 
     # 0, nests, Rocks_u, rocks_a, exits, trees
     num_items = [0, 3, 10, 10, 4, 6, 0]
-    item_r = [sum(num_items[:i+1]) for i in range(len(num_items))] # item range
+    item_r = [sum(num_items[:i + 1]) for i in range(len(num_items))]  # item range
     print(item_r)
     num_roots = [random.randint(3, 5) for _ in range(num_items[4])]
 
-    points = get_map_items(item_r[-1]) # 1 unused (nest)
+    points = get_map_items(item_r[-1])  # 1 unused (nest)
     print(points)
 
     # generate nest
@@ -633,11 +637,12 @@ def run(screen, params):
     exits = [Exit(i[0], i[1], screen) for i in points[item_r[3]:item_r[4]]]
 
     # generate trees last
-    trees = [Tree(i[0], i[1], random.choice(num_roots), random.choice(G.root_colours), screen) for i in points[item_r[4]:item_r[5]]]
+    trees = [Tree(i[0], i[1], random.choice(num_roots), random.choice(G.root_colours), screen) for i in
+             points[item_r[4]:item_r[5]]]
 
     # TODO try using groups
     underground_objects = u_rocks + exits + nests
-    aboveground_objects = a_rocks + exits # + trees
+    aboveground_objects = a_rocks + exits  # + trees
     group_underground.add(underground_objects)
     group_aboveground.add(aboveground_objects)
 
@@ -645,7 +650,7 @@ def run(screen, params):
     group_u_obstacles.add(trees, u_rocks)
     group_a_obstacles.add(trees, a_rocks)
 
-    #[print(i.x, i.y) for i in underground_objects]
+    # [print(i.x, i.y) for i in underground_objects]
 
     rat = Player(nests[0].x + 75, nests[0].y + 75, screen)
 
@@ -789,8 +794,8 @@ def run(screen, params):
 
             for obs in group_u_obstacles.sprites():
                 if pygame.sprite.collide_circle(ratrect, obs):
-                # b = obs.boundaries
-                # if b[0] <= px <= b[2] and b[1] <= py <= b[3]:
+                    # b = obs.boundaries
+                    # if b[0] <= px <= b[2] and b[1] <= py <= b[3]:
                     rat.stamina = min(rat.max_stamina, rat.stamina + G.idle_stamina_regen)
                     break
             else:
@@ -809,8 +814,8 @@ def run(screen, params):
 
             for obs in group_a_obstacles.sprites():
                 if pygame.sprite.collide_circle(ratrect, obs):
-                # b = obs.boundaries
-                # if b[0] <= px <= b[2] and b[1] <= py <= b[3]:
+                    # b = obs.boundaries
+                    # if b[0] <= px <= b[2] and b[1] <= py <= b[3]:
                     rat.stamina = min(rat.max_stamina, rat.stamina + G.idle_stamina_regen)
                     break
             else:
