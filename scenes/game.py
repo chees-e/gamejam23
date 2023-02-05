@@ -153,6 +153,7 @@ class Root:
 
         prev = self.coords[-1]
 
+
         if len(self.coords) >= self.length and self.alive and self.depth <= self.maxdepth:
             # print("Branching out")
             self.alive = False
@@ -215,7 +216,7 @@ class Root:
                 if delta_angle == 0:
                     self.angle += 10
                 else:
-                    self.angle += 90 / delta_angle
+                    self.angle += 45 / delta_angle
                 self.coords.pop()
             else:
                 self.angle += 5 - random.random() * 10
