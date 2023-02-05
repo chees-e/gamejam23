@@ -537,17 +537,20 @@ def run(screen, params):
                  pygame.image.load("./assets/dirt3.png"),
                  pygame.image.load("./assets/dirt-simple.png")]
 
-    for i in range(50):
-        for j in range(30):
-            t = pygame.transform.scale(random.choice(tiles), (30, 30))
+    for i in range(25):
+        for j in range(15):
+            t = pygame.transform.scale(random.choice(tiles), (60, 60))
             img = pygame.transform.rotate(t, round(random.randint(0, 3)) * 90)
-            u_bg.blit(img, (i * 30, j * 30, 30, 30))
+            u_bg.blit(img, (i * 60, j * 60, 60, 60))
 
-    tile = pygame.image.load("./assets/grass1.png")
+    tile = pygame.transform.scale(pygame.image.load("./assets/grass1.png"), (60, 60))
 
-    for i in range(10):
-        for j in range(6):
-            a_bg.blit(tile, (i * 150, j * 150, 150, 150))
+    for i in range(25):
+        for j in range(15):
+            if round(random.random()):
+                a_bg.blit(pygame.transform.flip(tile, True, False), (i * 60, j * 60, 60, 60))
+            else:
+                a_bg.blit(tile, (i * 60, j * 60, 60, 60))
 
     while True:
         for event in pygame.event.get():
@@ -558,6 +561,13 @@ def run(screen, params):
         if underground:
             screen.blit(u_bg, (0, 0, 1500, 900))
         else:
+            if update_counter % 29 == 0 and round(random.random()):
+                for i in range(25):
+                    for j in range(15):
+                        if round(random.random() * 4 - 4):
+                            a_bg.blit(pygame.transform.flip(tile, True, False), (i * 60, j * 60, 60, 60))
+                        else:
+                            a_bg.blit(tile, (i * 60, j * 60, 60, 60))
             screen.blit(a_bg, (0, 0, 1500, 900))
         px, py = rat.get_mouth()
         mx, my = pygame.mouse.get_pos()
