@@ -2,7 +2,7 @@ import pygame
 import random
 
 import util.const as G
-from scenes import menu, game, settings
+from scenes import menu, game, settings, credits_page
 
 
 class Game:
@@ -12,7 +12,7 @@ class Game:
             menu,
             game,
             settings,
-            credits
+            credits_page
         ]
 
         print("Game started")
