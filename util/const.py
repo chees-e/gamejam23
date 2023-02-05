@@ -32,7 +32,7 @@ energy_lost = 0.01
 energy_recharge_regen = 1
 
 chopping_stamina_cost_base = 1
-moving_stamina_cost = 0.5
+moving_stamina_cost = 0 # 0.5
 idle_stamina_regen = 0.5
 stamina_recharge_regen = 5
 
