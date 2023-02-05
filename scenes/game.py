@@ -29,7 +29,7 @@ def get_theta(x1, y1, x2, y2):  # Starts east, clockwise rotation
             target += 180
     return target
 
-# above/under TODO bruh change this
+# above/under
 underground = True
 
 # TODO, make a new group
@@ -233,7 +233,6 @@ class Root:
     def trim(self, x, y):
         for i in range(len(self.coords)):
             if (x - self.coords[i].x) ** 2 + (y - self.coords[i].y) ** 2 < G.collision_thres:
-                #print("CHOPPING")
                 got_wood = len(self.choppedsubroots) <= 0 < len(self.subroots)
 
                 self.choppedroot.extend(self.coords[i:])
@@ -282,7 +281,6 @@ class Tree(Sprite):
             newroot = Root(self.x, self.y, G.root_thickness, init_angle, G.root_maxlength, G.root_speed, 1, self.colour, self.screen)
             init_angle = (init_angle + random.randint(delta_angle - angle_error, delta_angle + angle_error)) % 360
             root_list.append(newroot)
-        # todo: add groups? maybe
         return root_list
 
     def draw(self, blink_counter):
@@ -328,6 +326,7 @@ class Rock(Sprite):
         self.x = x
         self.y = y
         self.rect = pygame.Rect(self.x, self.y, self.image.get_width(), self.image.get_height())
+        self.under = True
 
         self.boundaries = [
             self.x + self.size / G.hitbox_scale,
@@ -338,10 +337,19 @@ class Rock(Sprite):
 
         self.screen = screen
 
-    def draw(self, counter):
-        if not underground: # make this a function to switch
-            self.image = pygame.transform.scale(pygame.image.load("./assets/rock1.png"), (self.size, self.size))
-        self.screen.blit(self.image, (self.x, self.y))
+    def update_image(self, under):
+        if self.under != under:
+            if under:
+                self.image = pygame.transform.scale(pygame.image.load("./assets/rock-underground.png"),
+                                                    (self.size, self.size))
+            else:
+                self.image = pygame.transform.scale(pygame.image.load("./assets/rock1.png"), (self.size, self.size))
+
+    # def draw(self, counter):
+    #     if not underground: # make this a function to switch
+    #         self.image = pygame.transform.scale(pygame.image.load("./assets/rock1.png"), (self.size, self.size))
+    #     self.screen.blit(self.image, (self.x, self.y))
+
 
 class Exit(Sprite):
     def __init__(self, x, y, screen):
@@ -362,8 +370,8 @@ class Exit(Sprite):
             self.y + self.size * 3 / G.hitbox_scale
         ]
 
-    def draw(self, counter):
-        self.screen.blit(self.image, (self.x, self.y))
+    # def draw(self, counter):
+    #     self.screen.blit(self.image, (self.x, self.y))
 
 class Nest(Sprite):
     def __init__(self, x, y, screen):
@@ -384,13 +392,16 @@ class Nest(Sprite):
         ]
         print(self.triggers)
 
-    def draw(self, counter):
-        self.screen.blit(self.image, (self.x, self.y))
+    # def draw(self, counter):
+    #     self.screen.blit(self.image, (self.x, self.y))
 
-class Mouth(Sprite):
+
+# Used for collision detection
+class Temp(Sprite):
     def __init__(self, x, y):
         Sprite.__init__(self)
         self.rect = pygame.Rect(x-2,y-2,4,4)
+
 
 class Player(pygame.sprite.DirtySprite):
     def __init__(self, x, y, screen):
@@ -541,9 +552,9 @@ def run(screen, params):
 
     # TODO try using groups
     underground_objects = u_rocks + exits + [nest]
-    aboveground_objects = a_rocks + exits + trees
+    aboveground_objects = a_rocks + exits # + trees
     group_underground.add(underground_objects)
-    # group_aboveground = pygame.sprite.Group(aboveground_objects)
+    group_aboveground.add(aboveground_objects)
     #[print(i.x, i.y) for i in underground_objects]
 
     rat = Player(nest.x + 75, nest.y + 75, screen)
@@ -586,6 +597,12 @@ def run(screen, params):
             if event.type == pygame.QUIT:
                 return 0, {}
 
+        # Checking for switiching sides
+        if pygame.mouse.get_pressed(3)[0] and rat.near_mouse() and near_exit(exits, rat):
+            underground = not underground
+            for rock in a_rocks:
+                rock.update_image(underground)
+            time.sleep(0.25)
 
         if underground:
             screen.blit(u_bg, (0, 0, 1500, 900))
@@ -594,26 +611,32 @@ def run(screen, params):
         px, py = rat.get_mouth()
         mx, my = pygame.mouse.get_pos()
 
-        ratrect = Mouth(px, py)
-        mouserect = Mouth(mx, my)
+        ratrect = Temp(px, py)
+        mouserect = Temp(mx, my)
+
+        # Update tree
+        for obj in trees:
+            obj.draw(update_counter)
+
+        if len(display_text) > 0:
+            img = pygame.transform.scale(pygame.image.load("./assets/wood_1fab5.png"), (50, 50))
+            screen.blit(img,
+                        (display_text[0].x - rat.image.get_width() / 4, display_text[0].y - rat.image.get_height() / 4))
+            display_text[0].draw("white", 30)
+            wood_colour = "green"
+        else:
+            wood_colour = "white"
 
         if underground:
-            for obj in underground_objects:
-                obj.draw(update_counter)
-
-            for obj in trees:
-                obj.draw(update_counter)
+            group_underground.draw(screen)
 
             # the root depth if mouse is currently hovering over one
-
             collided_root = pygame.sprite.spritecollideany(mouserect, group_root)
 
             if collided_root is None:
                 hover_root_depth = 0
             else:
                 hover_root_depth = collided_root.depth
-
-            wood_colour = "white"
 
             if pygame.mouse.get_pressed(3)[0] and rat.near_mouse() and hover_root_depth > 0:
                 if chopping_meter == 0:
@@ -649,47 +672,14 @@ def run(screen, params):
             else:
                 chopping_meter = 0
 
-            if pygame.mouse.get_pressed(3)[0] and rat.near_mouse() and near_exit(exits, rat):
-                underground = False
-                time.sleep(0.25)
-
             if near_nest(nest, rat):
                 rat.energy = min(rat.max_energy, rat.energy + G.energy_recharge_regen)
                 rat.stamina = min(rat.max_stamina, rat.stamina + G.stamina_recharge_regen)
 
-            for text in display_text:
-                if text.timeleft <= 0:
-                    display_text.remove(text)
-                else:
-                    img = pygame.transform.scale(pygame.image.load("./assets/wood_1fab5.png"), (50, 50))
-                    screen.blit(img, (text.x - rat.image.get_width() / 4, text.y - rat.image.get_height() / 4))
-                    text.draw("white", 30)
-                    wood_colour = "green"
-
-            # wood counter
-            wood = Text(35, 50, f"Wood: {total_wood}", 99, screen)
-            wood.draw(wood_colour, 30)
-            if wood_colour == "green":
-                wood_colour = "white"
-
-            # energy
-            energy = Text(35, 100, f"Energy: {round(rat.energy)}", 99, screen)
-            color = ["red", "yellow", "green"][max(0, round(rat.energy * 3 / rat.max_energy) - 1)]
-            energy.draw(color, 30)
-
-            # stamina bar
-            color = ["red", "yellow", "green"][max(0, round(rat.stamina * 3 / rat.max_stamina) - 1)]
-            pygame.draw.rect(screen, "black", pygame.Rect(34, 139, round((rat.max_stamina - 1) / 2) + 2, 32), 1)
-            pygame.draw.rect(screen, color, pygame.Rect(35, 140, round(max(0, round(rat.stamina - 1)) / 2), 30))
-
-            # stamina text
-            stam = Text(115, 145, f"Stamina", 99, screen)
-            stam.draw("black", 30)
-
             if hover_root_depth > 0:
-                pygame.draw.circle(screen, power_colour[hover_root_depth], (collided_root.x, collided_root.y), 10)  # makes the rat looks like a clown
+                pygame.draw.circle(screen, power_colour[hover_root_depth], (collided_root.x, collided_root.y), 10)
 
-            rat.turn(pygame.mouse.get_pos())
+            rat.turn(pygame.mouse.get_pos()) # I still want this to be before move
 
             for i in underground_objects + trees:
                 b = i.boundaries
@@ -701,42 +691,10 @@ def run(screen, params):
                     rat.move(rat.stamina/rat.max_stamina+0.2)
                 else:
                     rat.move(2)
-
-            rat.energy -= G.energy_lost
         else:
-            for obj in aboveground_objects:
-                obj.draw(update_counter)
-            # group_aboveground.draw(screen) # Not working
+            group_aboveground.draw(screen)
 
-            for text in display_text:
-                if text.timeleft <= 0:
-                    display_text.remove(text)
-                else:
-                    img = pygame.transform.scale(pygame.image.load("./assets/wood_1fab5.png"), (50, 50))
-                    screen.blit(img, (text.x - rat.image.get_width() / 4, text.y - rat.image.get_height() / 4))
-                    text.draw("black", 30)
-
-            if pygame.mouse.get_pressed(3)[0] and rat.near_mouse() and near_exit(exits, rat):
-                underground = True
-                time.sleep(0.25)
-
-            # wood counter
-            wood = Text(35, 50, f"Wood: {total_wood}", 99, screen)
-            wood.draw("black", 30)
-
-            # energy
-            energy = Text(35, 100, f"Energy: {round(rat.energy)}", 99, screen)
-            color = ["red", "yellow", "green"][max(0, round(rat.energy * 3 / rat.max_energy) - 1)]
-            energy.draw(color, 30)
-
-            # stamina bar
-            color = ["red", "yellow", "green"][max(0, round(rat.stamina * 3 / rat.max_stamina) - 1)]
-            pygame.draw.rect(screen, "black", pygame.Rect(34, 139, round((rat.max_stamina - 1) / 2) + 2, 32), 1)
-            pygame.draw.rect(screen, color, pygame.Rect(35, 140, round(max(0, round(rat.stamina - 1)) / 2), 30))
-
-            # stamina text
-            stam = Text(115, 145, f"Stamina", 99, screen)
-            stam.draw("black", 30)
+            rat.turn(pygame.mouse.get_pos())
 
             for i in aboveground_objects:
                 b = i.boundaries
@@ -746,8 +704,32 @@ def run(screen, params):
             else:
                 rat.move(2)
 
-            rat.turn(pygame.mouse.get_pos())
-            rat.energy -= G.energy_lost
+        rat.energy -= G.energy_lost
+
+
+        ## Status displays
+        # wood counter
+        wood = Text(35, 50, f"Wood: {total_wood}", 99, screen)
+        wood.draw(wood_colour, 30)
+
+        # energy
+        energy = Text(35, 100, f"Energy: {round(rat.energy)}", 99, screen)
+        color = ["red", "yellow", "green"][max(0, round(rat.energy * 3 / rat.max_energy) - 1)]
+        energy.draw(color, 30)
+
+        # stamina bar
+        color = ["red", "yellow", "green"][max(0, round(rat.stamina * 3 / rat.max_stamina) - 1)]
+        pygame.draw.rect(screen, "black", pygame.Rect(34, 139, round((rat.max_stamina - 1) / 2) + 2, 32), 1)
+        pygame.draw.rect(screen, color, pygame.Rect(35, 140, round(max(0, round(rat.stamina - 1)) / 2), 30))
+
+        # stamina text
+        stam = Text(115, 145, f"Stamina", 99, screen)
+        stam.draw("black", 30)
+
+        ## Loop updates
+        for text in display_text:
+            if text.timeleft <= 0:
+                display_text.remove(text)
 
         if update_counter >= G.root_counter_max:
             for i in trees:
@@ -757,6 +739,3 @@ def run(screen, params):
         update_counter += 1
         pygame.display.flip()
         clock.tick(60)
-
-
-        #TODO: check tail and slowing down, rock collision
