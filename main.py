@@ -2,19 +2,18 @@ import pygame
 import random
 
 import util.const as G
-from scenes import menu, game, settings, credits_page, gameend
+from scenes import menu, game, credits_page, gameend
 
 
 class Game:
     def __init__(self, screen):
         self.screen = screen
-        # self.scenes = [
-        #     menu,
-        #     game,
-        #     settings,
-        #     credits_page,
-        #     gameend
-        # ]
+        self.scenes = [
+            menu,
+            game,
+            credits_page,
+            gameend
+        ]
 
         print("Game started")
 

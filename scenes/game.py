@@ -720,7 +720,7 @@ def run(screen, params):
     chopping_location = (0, 0)
     chopping_depth = 0
 
-    total_wood = 1000
+    total_wood = 0
     total_iron = 0
 
     required_power = [1, 300, 150, 75, 38, 20, 1]  # for chopping trees
