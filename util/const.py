@@ -28,7 +28,7 @@ extend_chance = 0.8
 wood_double_chance = 0.1
 wood_lost_chance = 0.3
 
-energy_lost = 0.01
+energy_lost = 0.05
 energy_recharge_regen = 1
 
 chopping_stamina_cost_base = 1
@@ -40,6 +40,8 @@ hitbox_scale = 4
 
 proximity_value = 100
 
+box_colour = "#b47b3c"
+border_colour = "#684132"
 
 trail_colour = "#1c1a1a" #TODO select better colour
 text_colour = "black"

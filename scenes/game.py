@@ -447,6 +447,21 @@ class Player(pygame.sprite.DirtySprite):
         self.trail = []
         self.traillength = 25
 
+        self.upgrade_level = [
+            [],
+            [0, 0.2],  # spd
+            [0, -0.05],  # move cost
+            [0, 50],  # max stam
+            [0, 0.05],  # stam regen
+            [0, 0.0125]  # energy cost
+        ]
+
+        self.spd = 2 + self.upgrade_level[1][0] * self.upgrade_level[1][-1]
+        self.move_cost = G.moving_stamina_cost + self.upgrade_level[2][0] * self.upgrade_level[2][-1]
+        self.max_stamina += self.upgrade_level[3][0] * self.upgrade_level[3][-1]
+        self.stamina_regen = G.idle_stamina_regen + self.upgrade_level[4][0] * self.upgrade_level[4][-1]
+        self.energy_cost = G.energy_lost + self.upgrade_level[5][0] * self.upgrade_level[5][-1]
+
     def turn(self, mouse):
         mx, my = mouse
         target = get_theta(self.x - screen_offset, self.y, mx, my)
@@ -482,7 +497,7 @@ class Player(pygame.sprite.DirtySprite):
                 print(screen_offset)
             self.stamina -= G.moving_stamina_cost
         else:
-            self.stamina = min(self.max_stamina, self.stamina + G.idle_stamina_regen)
+            self.stamina = min(self.max_stamina, self.stamina + self.stamina_regen)
 
         self.draw()
 
@@ -732,13 +747,13 @@ def run(screen, params):
             for i in underground_objects + trees:
                 b = i.boundaries
                 if b[0] <= px <= b[2] and b[1] <= py <= b[3]:
-                    rat.stamina = min(rat.max_stamina, rat.stamina + G.idle_stamina_regen)
+                    rat.stamina = min(rat.max_stamina, rat.stamina + rat.stamina_regen)
                     break
             else:
                 if pygame.sprite.spritecollideany(ratrect, group_root) is not None:
                     rat.move(rat.stamina / rat.max_stamina + 0.2)
                 else:
-                    rat.move(2)
+                    rat.move(rat.spd)
         else:
 
             group_aboveground.draw(screen)
@@ -751,12 +766,12 @@ def run(screen, params):
             for i in aboveground_objects:
                 b = i.boundaries
                 if b[0] <= px <= b[2] and b[1] <= py <= b[3]:
-                    rat.stamina = min(rat.max_stamina, rat.stamina + G.idle_stamina_regen)
+                    rat.stamina = min(rat.max_stamina, rat.stamina + rat.stamina_regen)
                     break
             else:
-                rat.move(2)
+                rat.move(rat.spd)
 
-        rat.energy -= G.energy_lost
+        rat.energy -= rat.energy_cost
 
         # for obj in trees:
         #     obj.update()
@@ -789,6 +804,55 @@ def run(screen, params):
         # stamina text
         stam = Text(115, 145, f"Stamina", 99, screen)
         stam.draw("black", 30)
+
+        for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN or event.type == pygame.KEYUP:
+                # spd
+                if event.key == pygame.K_1 and total_wood >= 2 ** rat.upgrade_level[1][0]:
+                    rat.upgrade_level[1][0] = min(5, rat.upgrade_level[1][0] + 1)
+                    total_wood -= 2 ** rat.upgrade_level[1][0]
+                # moving cost
+                elif event.key == pygame.K_2 and total_wood >= 2 ** rat.upgrade_level[2][0]:
+                    rat.upgrade_level[2][0] = min(5, rat.upgrade_level[2][0] + 1)
+                    total_wood -= 2 ** rat.upgrade_level[2][0]
+                # max stamina
+                elif event.key == pygame.K_3 and total_wood >= 2 ** rat.upgrade_level[3][0]:
+                    rat.upgrade_level[3][0] = min(5, rat.upgrade_level[3][0] + 1)
+                    total_wood -= 2 ** rat.upgrade_level[3][0]
+                # stamina regen
+                elif event.key == pygame.K_4 and total_wood >= 2 ** rat.upgrade_level[4][0]:
+                    rat.upgrade_level[4][0] = min(5, rat.upgrade_level[4][0] + 1)
+                    total_wood -= 2 ** rat.upgrade_level[4][0]
+                # energy cost
+                elif event.key == pygame.K_5 and total_wood >= 2 ** rat.upgrade_level[5][0]:
+                    rat.upgrade_level[5][0] = min(5, rat.upgrade_level[5][0] + 1)
+                    total_wood -= 2 ** rat.upgrade_level[5][0]
+
+        box = pygame.Surface((300, 400))
+        box.fill(G.box_colour)
+        screen.blit(box, (0, 250))
+        pygame.draw.rect(screen, G.border_colour, pygame.Rect(0, 250, 300, 400), 10)
+        trunk = pygame.transform.scale(pygame.image.load("./assets/wood_1fab5.png"), (75, 75))
+
+        left = 10
+        top = 260
+
+        upgrade_text_names = ['SPD', 'MOVE COST', 'MAX STAM', 'STAM REGEN', 'ENERGY COST']
+
+        locations = []
+        for i in range(5):
+            locations.append((left, top + i * 76))
+            screen.blit(trunk, (left + 200, top + i * 76))
+
+        for i in range(len(locations)):
+            print(i)
+            index = locations[i]
+            t = Text(index[0] + 76 / 8, index[1] + 76 / 4, f"{upgrade_text_names[i]}", 999, screen)
+            t.draw("white", 35)
+            t2 = Text(index[0] + 76 / 4, index[1] + 76 / 2 + 76 / 8, f"Lv. {rat.upgrade_level[i + 1][0]}", 999, screen)
+            t2.draw("white", 30)
+            t3 = Text(index[0] + 225, index[1] + 76 / 4 + 76 / 8, f"{2 ** rat.upgrade_level[1 + i][0]}", 999, screen)
+            t3.draw("white", 50)
 
         ## Loop updates
         for text in display_text:
