@@ -11,7 +11,7 @@ def run(screen, params):
     while True:
         credits = pygame_menu.Menu('', 1500, 900, theme=mainmenu)
 
-        credits.add.image('./assets/onlyclowns.png', scale=(2,2))
+        credits.add.image('./assets/onlyclowns.png', scale=(0.5,0.5))
         credits.add.label('programming - ricky , shawn , nick')
         credits.add.label('music - ricky')
         credits.add.label('art - jean')
