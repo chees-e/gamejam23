@@ -910,6 +910,16 @@ def run(screen, params):
             else:
                 rat.move(rat.spd)
 
+            if rat.x > 2 * G.width - 150:
+                # River:
+                for event in pygame.event.get():
+                    if event.type == pygame.KEYDOWN:
+                        # spd
+                        if event.key == pygame.K_1 and total_wood >= 2 ** rat.upgrade_level[1][0]:
+                            rat.upgrade_level[1][0] = min(5, rat.upgrade_level[1][0] + 1)
+                            total_wood -= 2 ** rat.upgrade_level[1][0]
+
+
         if len(display_text) > 0:
             img = pygame.transform.scale(pygame.image.load("./assets/wood_1fab5.png"), (50, 50))
             screen.blit(img,
@@ -963,7 +973,7 @@ def run(screen, params):
 
         if near_nest(nests, rat):
             for event in pygame.event.get():
-                if event.type == pygame.KEYDOWN or event.type == pygame.KEYUP:
+                if event.type == pygame.KEYDOWN:
                     # spd
                     if event.key == pygame.K_1 and total_wood >= 2 ** rat.upgrade_level[1][0]:
                         total_wood -= 2 ** rat.upgrade_level[1][0]
