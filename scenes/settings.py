@@ -24,7 +24,7 @@ surface = pygame.display.set_mode((1500, 900))
 settings_bg = pygame_menu.themes.THEME_DEFAULT.copy()
 
 settings_bg.background_color = pygame_menu.baseimage.BaseImage(
-    image_path="./assets/menu_bg.png",
+    image_path="./assets/menu-bg.png",
     drawing_mode=pygame_menu.baseimage.IMAGE_MODE_FILL,
     drawing_offset=(0, 0)
 )
