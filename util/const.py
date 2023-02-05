@@ -30,6 +30,9 @@ stamina_recharge_regen = 5
 
 hitbox_scale = 4
 
+proximity_value = 500
+
+
 trail_colour = "#1c1a1a" #TODO select better colour
 text_colour = "black"
 bg_colour = "white"
