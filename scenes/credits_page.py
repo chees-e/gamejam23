@@ -2,7 +2,7 @@ import pygame
 import pygame_menu
 
 from scenes import menu
-
+import util.getpath as P
 
 # RV:
 # next scene, next scenes parameters
@@ -11,7 +11,7 @@ def run(screen, params):
     while True:
         credits = pygame_menu.Menu('', 1500, 900, theme=credits_bg)
 
-        credits.add.image('./assets/onlyclowns.png', scale=(0.5,0.5))
+        credits.add.image(P.get('./assets/onlyclowns.png'), scale=(0.5,0.5))
         credits.add.label('programming - ricky , shawn , nick')
         credits.add.label('music - ricky')
         credits.add.label('art - jean')
@@ -26,7 +26,7 @@ surface = pygame.display.set_mode((1500, 900))
 
 credits_bg = pygame_menu.themes.THEME_DEFAULT.copy()
 credits_bg.background_color = pygame_menu.baseimage.BaseImage(
-    image_path="./assets/menu-bg.png",
+    image_path=P.get("./assets/menu-bg.png"),
     drawing_mode=pygame_menu.baseimage.IMAGE_MODE_FILL,
     drawing_offset=(0, 0)
 )

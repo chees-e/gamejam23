@@ -2,13 +2,14 @@ import pygame
 import pygame_menu
 
 from scenes import game, credits_page, tutorial
+import util.getpath as P
 
 
 # RV:
 # next scene, next scenes parameters
 # Entry point
 def run(screen, params):
-    pygame.mixer.music.load("./assets/music/lobby.wav")
+    pygame.mixer.music.load(P.get("./assets/music/lobby.wav"))
     pygame.mixer.music.play(-1)
     while True:
         menu = pygame_menu.Menu('', 1500, 900, theme=menu_bg)
@@ -29,7 +30,7 @@ surface = pygame.display.set_mode((1500, 900))
 # create custom theme
 menu_bg = pygame_menu.themes.THEME_DEFAULT.copy()  # copy default theme
 menu_bg.background_color = pygame_menu.baseimage.BaseImage(
-    image_path="./assets/title-screen.png",
+    image_path=P.get("./assets/title-screen.png"),
     drawing_mode=pygame_menu.baseimage.IMAGE_MODE_FILL,
     drawing_offset=(0, 0)
 )

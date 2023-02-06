@@ -1,5 +1,6 @@
 import pygame
 import util.const as G
+import util.getpath as P
 
 from scenes import menu, game, credits_page, gameend
 
@@ -20,7 +21,7 @@ def run(screen, params):
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     return 0, {}
 
-            worry = pygame.transform.scale(pygame.image.load("./assets/worryrat.png"), (900, 900))
+            worry = pygame.transform.scale(pygame.image.load(P.get("./assets/worryrat.png")), (900, 900))
             box = pygame.Surface((1500, 900))
             box.fill("black")
             screen.blit(box, (0, 0, 1500, 900))
