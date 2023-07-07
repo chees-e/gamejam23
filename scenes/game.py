@@ -6,6 +6,7 @@ from pygame.sprite import Sprite
 import random
 import math
 import util.const as G
+import util.getpath as P
 from scenes import gameend
 
 # Groups (global var for now)
@@ -17,6 +18,30 @@ group_u_obstacles = pygame.sprite.Group()
 group_a_obstacles = pygame.sprite.Group()
 group_u_mats = pygame.sprite.Group()
 group_a_mats = pygame.sprite.Group()
+
+# Images
+img_apple = pygame.image.load(P.get("./assets/apple.png"))
+img_carrot = pygame.image.load(P.get("./assets/carrot.png"))
+img_cheese = pygame.image.load(P.get("./assets/cheese.png"))
+img_iron = pygame.image.load(P.get("./assets/iron.png"))
+img_tree_truck = pygame.image.load(P.get("./assets/tree-trunk.png"))
+img_tree = pygame.image.load(P.get("./assets/tree.png"))
+img_rock_underground = pygame.image.load(P.get("./assets/rock-underground.png"))
+img_rock1 = pygame.image.load(P.get("./assets/rock1.png"))
+img_bush = pygame.image.load(P.get("./assets/bush.png"))
+img_exit = pygame.image.load(P.get("./assets/exit.png"))
+img_nest = pygame.image.load(P.get("./assets/nest.png"))
+img_rat3 = pygame.image.load(P.get("./assets/rat3.png"))
+img_dirt1 = pygame.image.load(P.get("./assets/dirt1.png"))
+img_dirt2 = pygame.image.load(P.get("./assets/dirt2.png"))
+img_dirt3 = pygame.image.load(P.get("./assets/dirt3.png"))
+img_dirt_simple = pygame.image.load(P.get("./assets/dirt-simple.png"))
+img_grass1 = pygame.image.load(P.get("./assets/grass1.png"))
+img_river1 = pygame.image.load(P.get("./assets/river1.png"))
+img_river2 = pygame.image.load(P.get("./assets/river2.png"))
+img_wood = pygame.image.load(P.get("./assets/wood_1fab5.png"))
+img_energy = pygame.image.load(P.get("./assets/energy.png"))
+
 
 # Angle: East = 0, goes CLOCKWISE
 def get_theta(x1, y1, x2, y2):  # Starts east, clockwise rotation
@@ -35,7 +60,6 @@ def get_theta(x1, y1, x2, y2):  # Starts east, clockwise rotation
 # above/under
 underground = True
 screen_offset = 0  # in the x direction
-
 
 # TODO, make a new group
 class Text:
@@ -85,12 +109,12 @@ class Material(Sprite):
         self.value = value # 0, 1, 2
         if not under:
             self.image = random.choice(
-                [pygame.transform.scale(pygame.image.load("./assets/apple.png"), (self.size, self.size)),
-                pygame.transform.scale(pygame.image.load("./assets/carrot.png"), (self.size, self.size)),
-                pygame.transform.scale(pygame.image.load("./assets/cheese.png"), (self.size, self.size))]
+                [pygame.transform.scale(img_apple, (self.size, self.size)),
+                pygame.transform.scale(img_carrot, (self.size, self.size)),
+                pygame.transform.scale(img_cheese, (self.size, self.size))]
             )
         else:
-            self.image = pygame.transform.scale(pygame.image.load("./assets/iron.png"), (self.size, self.size))
+            self.image = pygame.transform.scale(img_iron, (self.size, self.size))
 
         self.rect = pygame.Rect(self.x - self.image.get_width() // 2, self.y - self.image.get_height() // 2,
                                 self.image.get_width(), self.image.get_height())
@@ -242,7 +266,6 @@ class Root:
             collided_block = pygame.sprite.spritecollideany(self.coords[-1], group_underground)
 
             if collided_block is not None:
-                print("Collided")
                 rockx, rocky = collided_block.rect.center
                 rock_dir = get_theta(prev.x + delta_x, prev.y + delta_y, rockx, rocky)
                 delta_angle = self.angle - rock_dir
@@ -288,7 +311,7 @@ class Tree(Sprite):
     def __init__(self, x, y, num_roots, colour, screen):
         Sprite.__init__(self)
         self.size = 75
-        self.image = pygame.transform.scale(pygame.image.load("./assets/tree-trunk.png"), (self.size, self.size))
+        self.image = pygame.transform.scale(img_tree_truck, (self.size, self.size))
 
         self.x = x
         self.y = y
@@ -326,11 +349,11 @@ class Tree(Sprite):
         y = self.y - self.image.get_height() // 2
 
         if not underground:
-            self.image = pygame.image.load("./assets/tree.png")
+            self.image = img_tree
             y -= 100 - self.underground_y_offset
 
         else:
-            self.image = pygame.transform.scale(pygame.image.load("./assets/tree-trunk.png"), (self.size, self.size))
+            self.image = pygame.transform.scale(img_tree_truck, (self.size, self.size))
 
         self.screen.blit(self.image, (self.x - self.image.get_width() // 2 - screen_offset, y))
         self.rect = pygame.Rect(self.x - self.image.get_width() // 2 - screen_offset,
@@ -374,7 +397,7 @@ class Rock(Sprite):
     def __init__(self, x, y, screen):
         Sprite.__init__(self)
         self.size = random.randint(50, 100)
-        self.image = pygame.transform.scale(pygame.image.load("./assets/rock-underground.png"), (self.size, self.size))
+        self.image = pygame.transform.scale(img_rock_underground, (self.size, self.size))
         self.x = x
         self.y = y
         self.rect = pygame.Rect(self.x - self.image.get_width() // 2, self.y - self.image.get_width() // 2,
@@ -394,24 +417,19 @@ class Rock(Sprite):
     def update_image(self, under):
         if self.under != under:
             if under:
-                self.image = pygame.transform.scale(pygame.image.load("./assets/rock-underground.png"),
-                                                    (self.size, self.size))
+                self.image = pygame.transform.scale(img_rock_underground, (self.size, self.size))
             else:
-                self.image = pygame.transform.scale(pygame.image.load("./assets/rock1.png"), (self.size, self.size))
+                self.image = pygame.transform.scale(img_rock1, (self.size, self.size))
 
     def update(self):
         self.rect.x = self.x - self.image.get_width() // 2 - screen_offset
 
-    # def draw(self, counter):
-    #     if not underground: # make this a function to switch
-    #         self.image = pygame.transform.scale(pygame.image.load("./assets/rock1.png"), (self.size, self.size))
-    #     self.screen.blit(self.image, (self.x, self.y))
 
 class Bush(Sprite):
     def __init__(self, x, y, screen):
         Sprite.__init__(self)
         self.size = random.randint(25, 50)
-        self.image = pygame.transform.scale(pygame.image.load("./assets/bush.png"), (self.size, self.size))
+        self.image = pygame.transform.scale(img_bush, (self.size, self.size))
         self.x = x
         self.y = y
         self.rect = pygame.Rect(self.x - self.image.get_width() // 2, self.y - self.image.get_width() // 2,
@@ -438,7 +456,7 @@ class Exit(Sprite):
         self.x = x
         self.y = y
         self.size = 75
-        self.image = pygame.transform.scale(pygame.image.load("./assets/exit.png"), (self.size, self.size))
+        self.image = pygame.transform.scale(img_exit, (self.size, self.size))
         self.rect = pygame.Rect(self.x, self.y, self.image.get_width(), self.image.get_height())
         self.screen = screen
 
@@ -462,7 +480,7 @@ class Nest(Sprite):
         Sprite.__init__(self)
         self.x = x
         self.y = y
-        self.image = pygame.image.load("./assets/nest.png")
+        self.image = img_nest
         self.rect = pygame.Rect(self.x, self.y, self.image.get_width(), self.image.get_height())
         self.screen = screen
 
@@ -474,7 +492,7 @@ class Nest(Sprite):
             self.x + 150,
             self.y + 100
         ]
-        print(self.triggers)
+        # print(self.triggers)
 
     # def draw(self, counter):
     #     self.screen.blit(self.image, (self.x, self.y))
@@ -508,7 +526,7 @@ class Player(pygame.sprite.DirtySprite):
         self.max_stamina = 500.0
         self.stamina = 0.0
 
-        self.image = pygame.image.load("./assets/rat3.png")
+        self.image = img_rat3
         self.width = self.image.get_width()
         self.height = self.image.get_height()
         self.radius = self.width // 2
@@ -578,7 +596,7 @@ class Player(pygame.sprite.DirtySprite):
                 screen_offset = max(0, screen_offset - (G.tiles_width - (self.x - screen_offset)))
             elif self.x - screen_offset > G.width - G.tiles_width:
                 screen_offset = min(G.width, self.x - (G.width - G.tiles_width))
-                print(screen_offset)
+                # print(screen_offset)
             self.stamina -= G.moving_stamina_cost
         else:
             self.stamina = min(self.max_stamina, self.stamina + self.stamina_regen)
@@ -646,7 +664,7 @@ def get_map_items(num_items):
             newtile = (random.randint(1, G.tiles_x - 2), random.randint(1, G.tiles_y - 2))
         tiles.insert(0, newtile)  # Guarantees the first tile to be in the first frame
 
-    print(tiles)
+    # print(tiles)
     for (tilex, tiley) in tiles:
         minx = tilex * G.tiles_width + G.tile_offset
         maxx = (tilex + 1) * G.tiles_width - G.tile_offset
@@ -668,11 +686,11 @@ def run(screen, params):
     num_items = [0, 3, 18, 8, 20, 4, 10, 0]
     num_mats = 5
     item_r = [sum(num_items[:i + 1]) for i in range(len(num_items))]  # item range
-    print(item_r)
+    # print(item_r)
     num_roots = [random.randint(3, 5) for _ in range(num_items[4])]
 
     points = get_map_items(item_r[-1])  # 1 unused (nest)
-    print(points)
+    # print(points)
 
     # generate nest
     nests = [Nest(i[0], i[1], screen) for i in points[item_r[0]:item_r[1]]]
@@ -731,10 +749,7 @@ def run(screen, params):
     u_bg = pygame.Surface((2 * G.width, G.height))
     a_bg = pygame.Surface((2 * G.width, G.height))
 
-    tiles = [pygame.image.load("./assets/dirt1.png"),
-             pygame.image.load("./assets/dirt2.png"),
-             pygame.image.load("./assets/dirt3.png"),
-             pygame.image.load("./assets/dirt-simple.png")]
+    tiles = [img_dirt1, img_dirt2, img_dirt3, img_dirt_simple]
 
     for i in range(50):
         for j in range(15):
@@ -742,9 +757,9 @@ def run(screen, params):
             img = pygame.transform.rotate(t, round(random.randint(0, 3)) * 90)
             u_bg.blit(img, (i * 60, j * 60, 60, 60))
 
-    tile = pygame.transform.scale(pygame.image.load("./assets/grass1.png"), (60, 60))
-    rivertile = pygame.transform.scale(pygame.image.load("./assets/river1.png"), (60, 60))
-    rivertile2 = pygame.transform.scale(pygame.image.load("./assets/river2.png"), (60, 60)) # todo: not going into river
+    tile = pygame.transform.scale(img_grass1, (60, 60))
+    rivertile = pygame.transform.scale(img_river1, (60, 60))
+    rivertile2 = pygame.transform.scale(img_river2, (60, 60))
 
     for i in range(48):
         for j in range(15):
@@ -765,11 +780,11 @@ def run(screen, params):
             if event.type == pygame.QUIT:
                 return 0, {}
         if underground and not playing:
-            pygame.mixer.music.load('./assets/music/underground-loop.wav')
+            pygame.mixer.music.load(P.get('./assets/music/underground-loop.wav'))
             pygame.mixer.music.play(-1)
             playing = True
         elif not underground and not playing:
-            pygame.mixer.music.load('./assets/music/aboveground-loop.wav')
+            pygame.mixer.music.load(P.get('./assets/music/aboveground-loop.wav'))
             pygame.mixer.music.play(-1)
             playing = True
 
@@ -859,10 +874,10 @@ def run(screen, params):
                 if chopping_meter > required_power[hover_root_depth]:
                     chopping_meter = 0
                     for i in trees:
-                        wood_obtained = i.trim(chopping_location[0] + screen_offset, chopping_location[1])
+                        wood_obtained = i.trim(collided_root.x, collided_root.y)
                         if wood_obtained > 0:
                             display_text.append(
-                                Text(round(rat.x - screen_offset) - rat.image.get_width() / 4,
+                                Text(round(rat.x) - rat.image.get_width() / 4 - screen_offset,
                                      round(rat.y) - rat.image.get_height(),
                                      f"+{wood_obtained}", 60, screen))
                         # pygame.draw.circle(screen, "red", (px,py), 10) # makes the rat looks like a clown
@@ -912,9 +927,9 @@ def run(screen, params):
 
 
         if len(display_text) > 0:
-            img = pygame.transform.scale(pygame.image.load("./assets/wood_1fab5.png"), (50, 50))
+            img = pygame.transform.scale(img_wood, (50, 50))
             screen.blit(img,
-                        (display_text[0].x - screen_offset - rat.image.get_width() / 4,
+                        (display_text[0].x - rat.image.get_width() / 4,
                          display_text[0].y - rat.image.get_height() / 4))  # TODO check
             display_text[0].draw("white", 30)
             wood_colour = "green"
@@ -941,13 +956,13 @@ def run(screen, params):
 
         ## Status displays
         # wood counter
-        img = pygame.transform.scale(pygame.image.load("./assets/wood_1fab5.png"), (50, 50))
+        img = pygame.transform.scale(img_wood, (50, 50))
         screen.blit(img, (100, 35, 50, 50))
         wood = Text(35, 50, f"Wood:   {total_wood}", 99, screen)
         wood.draw(wood_colour, 30)
 
         # energy
-        e_img = pygame.transform.scale(pygame.image.load("./assets/energy.png"), (20, 30))
+        e_img = pygame.transform.scale(img_energy, (20, 30))
         energy = Text(35, 100, f"Energy    : {round(rat.energy)}", 99, screen)
         color = ["red", "yellow", "green"][max(0, round(rat.energy * 3 / rat.max_energy) - 1)]
         energy.draw(color, 30)
@@ -991,7 +1006,7 @@ def run(screen, params):
             box.fill(G.box_colour)
             screen.blit(box, (0, 250))
             pygame.draw.rect(screen, G.border_colour, pygame.Rect(0, 250, 300, 400), 10)
-            trunk = pygame.transform.scale(pygame.image.load("./assets/wood_1fab5.png"), (75, 75))
+            trunk = pygame.transform.scale(img_wood, (75, 75))
 
             left = 10
             top = 260
@@ -1019,7 +1034,7 @@ def run(screen, params):
                     # spd
                     if event.key == pygame.K_SPACE and total_wood >= 50:
                         screen.blit(a_bg, (-screen_offset, 0, 1500, 900))
-                        pygame.mixer.music.load("./assets/music/lobby.wav")
+                        pygame.mixer.music.load(P.get("./assets/music/lobby.wav"))
                         pygame.mixer.music.play(-1)
                         gameend.run(screen, {"won": True})
                         underground = False
@@ -1029,7 +1044,7 @@ def run(screen, params):
             box.fill(G.box_colour)
             screen.blit(box, (0, 250))
             pygame.draw.rect(screen, G.border_colour, pygame.Rect(0, 250, 300, 200), 10)
-            trunk = pygame.transform.scale(pygame.image.load("./assets/wood_1fab5.png"), (75, 75))
+            trunk = pygame.transform.scale(img_wood, (75, 75))
 
             left = 10
             top = 260
@@ -1063,7 +1078,7 @@ def run(screen, params):
 
         if rat.energy <= 0:
             screen.blit(u_bg, (-screen_offset, 0, 1500, 900))
-            pygame.mixer.music.load("./assets/music/lobby.wav")
+            pygame.mixer.music.load(P.get("./assets/music/lobby.wav"))
             pygame.mixer.music.play(-1)
             gameend.run(screen, {"won": False})
             return

@@ -29,7 +29,7 @@ class Game:
 def main():
     pygame.init()
 
-    pygame.display.set_caption("Insert game name")
+    pygame.display.set_caption("Nyyk's Bizarre Adventure")
     screen = pygame.display.set_mode(G.size)
     # add other screen initialization
     screen.fill(G.bg_colour)
